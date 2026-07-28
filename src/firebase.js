@@ -10,7 +10,7 @@ const firebaseConfig = {
   projectId: "alau-academy",
   storageBucket: "alau-academy.firebasestorage.app",
   messagingSenderId: "170213819709",
-  appId: "1:170213819709:web:69ea8bfaa126ce4926f154"
+  appId: "1:170213819709:web:90fd330201e5d2ca26f154"
 };
 
 const app = initializeApp(firebaseConfig);
