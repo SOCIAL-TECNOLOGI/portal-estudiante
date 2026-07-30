@@ -76,5 +76,5 @@ export function useEstudiante() {
     }
   };
 
-  return { uid, perfil, loading, modoAcceso, setModoAcceso, buscarPorDocumento };
+  return { uid, perfil, loading, modoAcceso, setModoAcceso, buscarPorDocumento, perfilManual };
 }

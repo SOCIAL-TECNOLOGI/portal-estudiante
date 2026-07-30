@@ -14,7 +14,7 @@ const MUNDOS = {
 };
 
 export default function Portal() {
-  const { uid, perfil, loading: loadingPerfil, modoAcceso, setModoAcceso, buscarPorDocumento } = useEstudiante();
+  const { uid, perfil, loading: loadingPerfil, modoAcceso, setModoAcceso, buscarPorDocumento, perfilManual } = useEstudiante();
   const { porNivel, loading: loadingRuta } = useRuta(uid, perfil);
   const [solicitud, setSolicitud] = useState(null);
   const [loadingSolicitud, setLoadingSolicitud] = useState(true);
@@ -203,8 +203,9 @@ if (modoAcceso === 'pendiente_manual') {
   const cuartilActual = perfil.trayectoria?.cuartil_actual || 'Q1';
   const progreso = perfil.progreso?.general || 0;
 
-  // PENDIENTE
-  if (!solicitud || solicitud.estado === 'pendiente') {
+  
+  // PENDIENTE — solo si no entró por documento
+  if (!perfilManual && (!solicitud || solicitud.estado === 'pendiente')) {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
