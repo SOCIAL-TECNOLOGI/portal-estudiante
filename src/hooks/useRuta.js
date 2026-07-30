@@ -69,8 +69,7 @@ export function useRuta(uid, perfil) {
     return () => unsub();
   }, [uid]);
 
-console.log('useRuta uid:', uid);
-  console.log('Sesiones cargadas:', sesiones.length, sesiones.map(s => s.cuestionarioId));
+
   const rutaCalculada = cuestionarios.map(c => {
     const sesion = sesiones?.find(s => s.cuestionarioId === c.id);
     return {
