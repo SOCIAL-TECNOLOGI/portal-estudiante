@@ -366,11 +366,17 @@ if (modoAcceso === 'pendiente_manual') {
     <div onClick={e => e.stopPropagation()} style={{ background: '#0f172a', border: '1px solid #1f2937', borderRadius: 16, padding: 24, maxWidth: 420, width: '100%' }}>
       <div style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 600, marginBottom: 4 }}>✅ Completado</div>
       <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f1f5f9', marginBottom: 16 }}>{modalSesion.nombre}</div>
-      {perfil?.trayectoria?.resumen_publico && (
+      {(modalSesion?.sesion?.diagnostico?.resumen_publico || perfil?.trayectoria?.resumen_publico) && (
         <div style={{ fontSize: '0.82rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 16 }}>
-          {perfil.trayectoria.resumen_publico}
+          {modalSesion?.sesion?.diagnostico?.resumen_publico || perfil?.trayectoria?.resumen_publico}
         </div>
       )}
+      {(modalSesion?.sesion?.diagnostico?.mensaje_estudiante || perfil?.trayectoria?.mensaje_estudiante) && (
+        <div style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: '0.82rem', color: '#38bdf8', lineHeight: 1.6, marginBottom: 16 }}>
+          💬 {modalSesion?.sesion?.diagnostico?.mensaje_estudiante || perfil?.trayectoria?.mensaje_estudiante}
+        </div>
+      )}
+
       {perfil?.trayectoria?.mensaje_estudiante && (
         <div style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: '0.82rem', color: '#38bdf8', lineHeight: 1.6, marginBottom: 16 }}>
           💬 {perfil.trayectoria.mensaje_estudiante}
