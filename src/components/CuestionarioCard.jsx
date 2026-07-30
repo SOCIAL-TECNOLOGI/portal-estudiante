@@ -19,8 +19,8 @@ export default function CuestionarioCard({ cuestionario, onClick }) {
         border: `0.5px solid ${estado === 'available' ? '#3b82f6' : estado === 'completed' || estado === 'mastery' ? '#16a34a' : '#e2e8f0'}`,
         background: 'var(--surface-2, #fff)',
         padding: '0.875rem 1rem',
-        cursor: locked ? 'default' : 'pointer',
-        opacity: locked ? 0.6 : 1,
+        cursor: estado === 'locked' ? 'default' : 'pointer',
+        opacity: estado === 'locked' ? 0.6 : 1,
         transition: 'border-color 0.15s',
       }}
     >

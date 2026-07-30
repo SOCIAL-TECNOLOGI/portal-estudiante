@@ -349,7 +349,6 @@ if (modoAcceso === 'pendiente_manual') {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
                 {cuests.map(c => (
                   <CuestionarioCard key={c.id} cuestionario={c} onClick={c => {
-  console.log('Abrir:', c.id);
   if (c.estado === 'completed' || c.estado === 'mastery') {
     setModalSesion(c);
   } else if (c.estado === 'available') {
