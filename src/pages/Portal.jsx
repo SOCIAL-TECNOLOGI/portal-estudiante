@@ -379,11 +379,12 @@ if (modoAcceso === 'pendiente_manual') {
       )}
       <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ flex: 1, background: '#1f2937', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f1f5f9' }}>{modalSesion.sesion?.pct || 0}%</div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f1f5f9' }}>{modalSesion?.sesion?.pct ?? perfil?.progreso?.general ?? 0}%</div>
           <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>aciertos</div>
         </div>
         <div style={{ flex: 1, background: '#1f2937', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f1f5f9' }}>{perfil?.trayectoria?.patron_detectado || '—'}</div>
+          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f1f5f9' }}>{modalSesion?.sesion?.diagnostico?.patron_detectado || perfil?.trayectoria?.patron_detectado || '—'}</div>
+
           <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>patrón</div>
         </div>
       </div>
