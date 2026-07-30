@@ -71,10 +71,14 @@ export function useRuta(uid, perfil) {
 
 console.log('useRuta uid:', uid);
   console.log('Sesiones cargadas:', sesiones.length, sesiones.map(s => s.cuestionarioId));
-  const rutaCalculada = cuestionarios.map(c => ({
-    ...c,
-    estado: calcularEstadoCuestionario(c, perfil, sesiones)
-  }));
+  const rutaCalculada = cuestionarios.map(c => {
+    const sesion = sesiones?.find(s => s.cuestionarioId === c.id);
+    return {
+      ...c,
+      estado: calcularEstadoCuestionario(c, perfil, sesiones),
+      sesion: sesion || null
+    };
+  });
 
   const porNivel = {
     N1: rutaCalculada.filter(c => (c.nivel_minimo || 'N1') === 'N1'),
