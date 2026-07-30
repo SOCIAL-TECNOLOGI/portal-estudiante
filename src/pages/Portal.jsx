@@ -14,6 +14,7 @@ const MUNDOS = {
 };
 
 export default function Portal() {
+  const [modalSesion, setModalSesion] = useState(null);
   const { uid, perfil, loading: loadingPerfil, modoAcceso, setModoAcceso, buscarPorDocumento, perfilManual } = useEstudiante();
   const { porNivel, loading: loadingRuta } = useRuta(uid, perfil);
   const [solicitud, setSolicitud] = useState(null);
@@ -347,12 +348,51 @@ if (modoAcceso === 'pendiente_manual') {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
                 {cuests.map(c => (
-                  <CuestionarioCard key={c.id} cuestionario={c} onClick={c => console.log('Abrir:', c.id)} />
+                  <CuestionarioCard key={c.id} cuestionario={c} onClick={c => {
+  console.log('Abrir:', c.id);
+  if (c.estado === 'completed' || c.estado === 'mastery') {
+    setModalSesion(c);
+  } else if (c.estado === 'available') {
+    window.open('https://alau.fedusocial.org', '_blank');
+  }
+}} />
                 ))}
               </div>
             </div>
           );
         })}
+
+{modalSesion && (
+  <div onClick={() => setModalSesion(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+    <div onClick={e => e.stopPropagation()} style={{ background: '#0f172a', border: '1px solid #1f2937', borderRadius: 16, padding: 24, maxWidth: 420, width: '100%' }}>
+      <div style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 600, marginBottom: 4 }}>✅ Completado</div>
+      <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f1f5f9', marginBottom: 16 }}>{modalSesion.nombre}</div>
+      {perfil?.trayectoria?.resumen_publico && (
+        <div style={{ fontSize: '0.82rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 16 }}>
+          {perfil.trayectoria.resumen_publico}
+        </div>
+      )}
+      {perfil?.trayectoria?.mensaje_estudiante && (
+        <div style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: '0.82rem', color: '#38bdf8', lineHeight: 1.6, marginBottom: 16 }}>
+          💬 {perfil.trayectoria.mensaje_estudiante}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ flex: 1, background: '#1f2937', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f1f5f9' }}>{modalSesion.sesion?.pct || 0}%</div>
+          <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>aciertos</div>
+        </div>
+        <div style={{ flex: 1, background: '#1f2937', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f1f5f9' }}>{perfil?.trayectoria?.patron_detectado || '—'}</div>
+          <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>patrón</div>
+        </div>
+      </div>
+      <button onClick={() => setModalSesion(null)} style={{ width: '100%', marginTop: 16, padding: '0.75rem', borderRadius: 40, background: '#1f2937', color: '#9ca3af', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}>
+        Cerrar
+      </button>
+    </div>
+  </div>
+)}
 
         <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.72rem', marginTop: 32, paddingTop: 20, borderTop: '1px solid #1f2937' }}>
           SITE-RUTA LATAM · Fedusocial · Universidad del Tolima
