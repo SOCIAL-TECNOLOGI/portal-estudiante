@@ -21,10 +21,11 @@ function calcularEstadoCuestionario(cuestionario, perfil, sesiones) {
 
   // Verificar si ya lo completó
   const sesion = sesiones?.find(s => s.cuestionarioId === cuestionario.id);
-  if (sesion?.completado) {
-    return sesion.pct >= 90 ? 'mastery' : 'completed';
+ 
+   if (sesion) {
+    if (sesion.pct >= 90) return 'mastery';
+    return 'completed';
   }
-  if (sesion) return 'progress';
 
   // Verificar si tiene el nivel mínimo
   const tieneNivel = NIVEL_ORDEN[nivelActual] >= NIVEL_ORDEN[nivel];
