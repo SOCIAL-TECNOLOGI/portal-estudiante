@@ -4,7 +4,7 @@ import { ref, get } from 'firebase/database';
 
 const PMAP_URL = 'https://motor1.alau.fedusocial.org';
 
-export default function GrabacionesEstudiante({ uid }) {
+export default function GrabacionesEstudiante({ uid, institucion, grado }) {
   const [abierto, setAbierto] = useState(false);
   const [grabaciones, setGrabaciones] = useState([]);
   const [cargando, setCargando] = useState(false);
