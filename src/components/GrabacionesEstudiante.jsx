@@ -23,8 +23,12 @@ export default function GrabacionesEstudiante({ uid, institucion, grado }) {
       const instNorm = norm(institucion);
       const gradNorm = norm(grado);
       console.log('inst:', institucion, '→', instNorm, '| grado:', grado, '→', gradNorm);
-      const filtradas = (instNorm && gradNorm)
-        ? d.grabaciones.filter(g => norm(g.institucion).includes(instNorm.slice(0,6)) && norm(g.grado) === gradNorm)
+           const filtradas = instNorm
+        ? d.grabaciones.filter(g => {
+            const instMatch = norm(g.institucion).includes(instNorm.slice(0,6));
+            const gradMatch = gradNorm ? norm(g.grado) === gradNorm : true;
+            return instMatch && gradMatch;
+          })
         : d.grabaciones;
       setGrabaciones(filtradas);
     } catch(e) {
