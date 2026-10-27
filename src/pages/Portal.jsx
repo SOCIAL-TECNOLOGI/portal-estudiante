@@ -4,7 +4,8 @@ import { useEstudiante } from '../hooks/useEstudiante';
 import { useRuta } from '../hooks/useRuta';
 import CuestionarioCard from '../components/CuestionarioCard';
 import { db } from '../firebase';
-import { ref, onValue, set } from 'firebase/database';
+import { ref, onValue, set, query, orderByChild, equalTo } from 'firebase/database';
+import GrabacionesEstudiante from '../components/GrabacionesEstudiante';
 
 const MUNDOS = {
   N1: { titulo: 'Mundo 1 — Reconocimiento', sub: 'Localizar, identificar y relacionar información explícita', color: '#16a34a' },
@@ -23,15 +24,21 @@ export default function Portal() {
 
   // Escuchar estado de solicitud
   useEffect(() => {
+    console.log('useEffect solicitud:', { uid, perfilManual });
     if (!uid) return;
+    if (!perfilManual) {
+      setLoadingSolicitud(false);
+      return;
+    }
+    setLoadingSolicitud(true);
     const solRef = ref(db, `solicitudes_portal/${uid}`);
     const unsub = onValue(solRef, snap => {
       setSolicitud(snap.val());
+      console.log('Solicitud uid:', uid, snap.val());
       setLoadingSolicitud(false);
     });
     return () => unsub();
-  }, [uid]);
-
+  }, [uid, perfilManual]);
 const enviarSolicitud = async () => {
     if (!perfil) return;
     setEnviando(true);
@@ -206,7 +213,7 @@ if (modoAcceso === 'pendiente_manual') {
 
   
   // PENDIENTE — solo si no entró por documento
-  if (!perfilManual && (!solicitud || solicitud.estado === 'pendiente')) {
+  if (!perfilManual && (!solicitud || solicitud?.estado === 'pendiente')) {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -244,7 +251,7 @@ if (modoAcceso === 'pendiente_manual') {
   }
 
   // RECHAZADO
-  if (solicitud.estado === 'rechazado') {
+  if (solicitud?.estado === 'rechazado') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -259,7 +266,7 @@ if (modoAcceso === 'pendiente_manual') {
   }
 
   // SUSPENDIDO
-  if (solicitud.estado === 'suspendido') {
+  if (solicitud?.estado === 'suspendido') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -277,7 +284,7 @@ if (modoAcceso === 'pendiente_manual') {
   }
 
   // BLOQUEADO
-  if (solicitud.estado === 'bloqueado') {
+  if (solicitud?.estado === 'bloqueado') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -399,6 +406,8 @@ if (modoAcceso === 'pendiente_manual') {
     </div>
   </div>
 )}
+
+              <GrabacionesEstudiante institucion={perfil.datos?.institucion || ''} grado={perfil.datos?.grado || ''} />
 
         <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.72rem', marginTop: 32, paddingTop: 20, borderTop: '1px solid #1f2937' }}>
           SITE-RUTA LATAM · Fedusocial · Universidad del Tolima

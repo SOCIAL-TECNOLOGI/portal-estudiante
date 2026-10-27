@@ -1,3 +1,4 @@
+import GrabacionesEstudiante from '../components/GrabacionesEstudiante';
 const ESTADOS = {
   locked:    { label: 'Bloqueado',    bg: '#f1f5f9', color: '#94a3b8', icon: '🔒' },
   available: { label: 'Disponible',   bg: '#eff6ff', color: '#3b82f6', icon: '⚡' },
