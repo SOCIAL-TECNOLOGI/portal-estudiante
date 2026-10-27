@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { db } from '../firebase';
 import { ref, get } from 'firebase/database';
 
-const PMAP_URL = 'https://pmap.lostutores.co';
+const PMAP_URL = 'https://motor1.alau.fedusocial.org';
 
 export default function GrabacionesEstudiante({ uid }) {
   const [abierto, setAbierto] = useState(false);
