@@ -18,6 +18,7 @@ export default function GrabacionesEstudiante({ uid }) {
       // 1. Obtener sessionPaths del estudiante desde Firebase
       const sesSnap = await get(ref(db, `estudiantes/${uid}/sesiones`));
       const sesiones = sesSnap.val() || {};
+      console.log('sesiones Firebase:', sesSnap.val(), 'sessionPaths:', Object.keys(sesiones));
       const sessionPaths = Object.keys(sesiones); // ej: ["I_E_LA_MERCED/10/BIOLOGIA_..."]
 
       // 2. Obtener todas las grabaciones
