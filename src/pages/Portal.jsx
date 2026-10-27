@@ -407,7 +407,7 @@ if (modoAcceso === 'pendiente_manual') {
   </div>
 )}
 
-                      <GrabacionesEstudiante uid={uid} />
+                            <GrabacionesEstudiante uid={uid} institucion={perfil.datos?.institucion || ''} grado={perfil.datos?.grado || ''} />
         <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.72rem', marginTop: 32, paddingTop: 20, borderTop: '1px solid #1f2937' }}>
           SITE-RUTA LATAM · Fedusocial · Universidad del Tolima
         </div>

@@ -9,34 +9,28 @@ export default function GrabacionesEstudiante({ uid }) {
   const [grabaciones, setGrabaciones] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [videoActivo, setVideoActivo] = useState(null);
-
+  
+  
   const cargar = async () => {
     if (abierto) { setAbierto(false); return; }
     setCargando(true);
     setAbierto(true);
     try {
-      // 1. Obtener sessionPaths del estudiante desde Firebase
-      const sesSnap = await get(ref(db, `estudiantes/${uid}/sesiones`));
-      const sesiones = sesSnap.val() || {};
-      console.log('sesiones Firebase:', sesSnap.val(), 'sessionPaths:', Object.keys(sesiones));
-      const sessionPaths = Object.keys(sesiones); // ej: ["I_E_LA_MERCED/10/BIOLOGIA_..."]
-
-      // 2. Obtener todas las grabaciones
       const r = await fetch(PMAP_URL + '/api/grabaciones');
       const d = await r.json();
       if (!d.ok || !d.grabaciones?.length) { setGrabaciones([]); setCargando(false); return; }
-
-      // 3. Filtrar: grabación cuyo sesKey coincide con algún sessionPath del estudiante
-      const filtradas = d.grabaciones.filter(g =>
-        sessionPaths.some(sp => g.sesKey && g.sesKey.startsWith(sp.replace(/\//g, '_')))
-      );
+      const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const instNorm = norm(institucion);
+      const gradNorm = norm(grado);
+      const filtradas = (instNorm && gradNorm)
+        ? d.grabaciones.filter(g => norm(g.institucion).includes(instNorm.slice(0,6)) && norm(g.grado) === gradNorm)
+        : d.grabaciones;
       setGrabaciones(filtradas);
     } catch(e) {
       setGrabaciones([]);
     }
     setCargando(false);
   };
-
   return (
     <div style={{ marginTop: 28 }}>
       <button onClick={cargar} style={{
