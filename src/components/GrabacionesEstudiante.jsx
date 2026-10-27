@@ -11,7 +11,7 @@ export default function GrabacionesEstudiante({ uid, institucion, grado }) {
   const [videoActivo, setVideoActivo] = useState(null);
   
   
-  const cargar = async () => {
+   const cargar = async () => {
     if (abierto) { setAbierto(false); return; }
     setCargando(true);
     setAbierto(true);
@@ -22,6 +22,7 @@ export default function GrabacionesEstudiante({ uid, institucion, grado }) {
       const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       const instNorm = norm(institucion);
       const gradNorm = norm(grado);
+      console.log('inst:', institucion, '→', instNorm, '| grado:', grado, '→', gradNorm);
       const filtradas = (instNorm && gradNorm)
         ? d.grabaciones.filter(g => norm(g.institucion).includes(instNorm.slice(0,6)) && norm(g.grado) === gradNorm)
         : d.grabaciones;
@@ -31,6 +32,9 @@ export default function GrabacionesEstudiante({ uid, institucion, grado }) {
     }
     setCargando(false);
   };
+
+
+
   return (
     <div style={{ marginTop: 28 }}>
       <button onClick={cargar} style={{
