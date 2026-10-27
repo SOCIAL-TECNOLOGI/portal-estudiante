@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { db } from '../firebase';
+import { ref, get } from 'firebase/database';
 
 const PMAP_URL = 'https://pmap.lostutores.co';
 
-export default function GrabacionesEstudiante({ institucion, grado }) {
+export default function GrabacionesEstudiante({ uid }) {
   const [abierto, setAbierto] = useState(false);
   const [grabaciones, setGrabaciones] = useState([]);
   const [cargando, setCargando] = useState(false);
@@ -13,12 +15,20 @@ export default function GrabacionesEstudiante({ institucion, grado }) {
     setCargando(true);
     setAbierto(true);
     try {
+      // 1. Obtener sessionPaths del estudiante desde Firebase
+      const sesSnap = await get(ref(db, `estudiantes/${uid}/sesiones`));
+      const sesiones = sesSnap.val() || {};
+      const sessionPaths = Object.keys(sesiones); // ej: ["I_E_LA_MERCED/10/BIOLOGIA_..."]
+
+      // 2. Obtener todas las grabaciones
       const r = await fetch(PMAP_URL + '/api/grabaciones');
       const d = await r.json();
       if (!d.ok || !d.grabaciones?.length) { setGrabaciones([]); setCargando(false); return; }
-      const filtradas = (institucion && grado)
-        ? d.grabaciones.filter(g => g.institucion === institucion && g.grado === grado)
-        : d.grabaciones;
+
+      // 3. Filtrar: grabación cuyo sesKey coincide con algún sessionPath del estudiante
+      const filtradas = d.grabaciones.filter(g =>
+        sessionPaths.some(sp => g.sesKey && g.sesKey.startsWith(sp.replace(/\//g, '_')))
+      );
       setGrabaciones(filtradas);
     } catch(e) {
       setGrabaciones([]);
