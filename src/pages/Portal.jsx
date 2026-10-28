@@ -246,7 +246,7 @@ if (modoAcceso === 'pendiente_manual') {
   }
 
   // RECHAZADO
-  if (solicitud.estado === 'rechazado') {
+  if (solicitud?.estado === 'rechazado') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -261,7 +261,7 @@ if (modoAcceso === 'pendiente_manual') {
   }
 
   // SUSPENDIDO
-  if (solicitud.estado === 'suspendido') {
+  if (solicitud?.estado === 'suspendido') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -279,7 +279,7 @@ if (modoAcceso === 'pendiente_manual') {
   }
 
   // BLOQUEADO
-  if (solicitud.estado === 'bloqueado') {
+  if (solicitud?.estado === 'bloqueado') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
