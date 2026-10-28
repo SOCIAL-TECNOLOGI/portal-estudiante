@@ -4,6 +4,7 @@ import { useEstudiante } from '../hooks/useEstudiante';
 import { useRuta } from '../hooks/useRuta';
 import { usePmap } from '../hooks/usePmap';
 import CuestionarioCard from '../components/CuestionarioCard';
+import GrabacionesEstudiante from '../components/GrabacionesEstudiante';
 import { db } from '../firebase';
 import { ref, onValue, set } from 'firebase/database';
 
@@ -414,6 +415,12 @@ if (modoAcceso === 'pendiente_manual') {
     </div>
   </div>
 )}
+
+        <GrabacionesEstudiante
+          uid={uid}
+          institucion={perfil.datos?.institucion || ''}
+          grado={perfil.datos?.grado || ''}
+        />
 
         <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.72rem', marginTop: 32, paddingTop: 20, borderTop: '1px solid #1f2937' }}>
           SITE-RUTA LATAM · Fedusocial · Universidad del Tolima
