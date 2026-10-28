@@ -15,6 +15,182 @@ const MUNDOS = {
   N4: { titulo: 'Mundo 4 — Pensamiento crítico', sub: 'Síntesis, creatividad y construcción de conocimiento', color: '#9333ea' },
 };
 
+const TENDENCIA_LABEL = { estable: '→ Estable', descendente: '↓ Descendente', inconsistente: '↔ Inconsistente', ascendente: '↑ Ascendente' };
+const TENDENCIA_COLOR = { estable: '#38bdf8', descendente: '#f87171', inconsistente: '#fbbf24', ascendente: '#4ade80' };
+
+function SeccionPmap({ pmap }) {
+  const [abierto, setAbierto] = useState(false);
+  const [sesionAbierta, setSesionAbierta] = useState(null);
+
+  if (!pmap || (!pmap.trayectoria?.patron_detectado && !Object.keys(pmap.sesiones || {}).length)) return null;
+
+  const tray = pmap.trayectoria || {};
+  const sesiones = pmap.sesiones || {};
+  const sesionesList = Object.entries(sesiones)
+    .map(([key, s]) => ({ key, ...s }))
+    .sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+
+  const tendColor = TENDENCIA_COLOR[tray.tendencia] || '#9ca3af';
+  const tendLabel = TENDENCIA_LABEL[tray.tendencia] || tray.tendencia || '—';
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      {/* Cabecera sección */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(168,85,247,0.15)', border: '1px solid #a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
+          🧠
+        </div>
+        <div>
+          <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#f1f5f9' }}>Mi diagnóstico PMAP</div>
+          <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>Patrón de aprendizaje y trayectoria personalizada</div>
+        </div>
+      </div>
+
+      {/* Trayectoria general */}
+      {(tray.patron_detectado || tray.nivel_actual) && (
+        <div style={{ background: '#0f172a', border: '1px solid #1f2937', borderRadius: 14, padding: '16px 18px', marginBottom: 12 }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a855f7', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trayectoria general</div>
+
+          {/* Chips nivel + tendencia */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+            {tray.nivel_actual && (
+              <span style={{ background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', color: '#38bdf8', fontWeight: 600 }}>
+                Nivel {tray.nivel_actual}
+              </span>
+            )}
+            {tray.tendencia && (
+              <span style={{ background: `${tendColor}18`, border: `1px solid ${tendColor}44`, borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', color: tendColor, fontWeight: 600 }}>
+                {tendLabel}
+              </span>
+            )}
+            {tray.patron_detectado && (
+              <span style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', color: '#a855f7', fontWeight: 600 }}>
+                {tray.patron_detectado.replace(/_/g, ' ')}
+              </span>
+            )}
+          </div>
+
+          {/* Fortaleza + Área de trabajo */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+            {tray.fortaleza && (
+              <div style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: '0.68rem', color: '#4ade80', fontWeight: 600, marginBottom: 4 }}>✅ Fortaleza</div>
+                <div style={{ fontSize: '0.78rem', color: '#d1d5db', lineHeight: 1.5 }}>{tray.fortaleza}</div>
+              </div>
+            )}
+            {tray.area_trabajo && (
+              <div style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: '0.68rem', color: '#fbbf24', fontWeight: 600, marginBottom: 4 }}>🎯 Área de trabajo</div>
+                <div style={{ fontSize: '0.78rem', color: '#d1d5db', lineHeight: 1.5 }}>{tray.area_trabajo}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Resumen */}
+          {tray.resumen_publico && (
+            <div style={{ fontSize: '0.82rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 12 }}>
+              {tray.resumen_publico}
+            </div>
+          )}
+
+          {/* Mensaje motivacional */}
+          {tray.mensaje_estudiante && (
+            <div style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: '0.82rem', color: '#38bdf8', lineHeight: 1.6 }}>
+              💬 {tray.mensaje_estudiante}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Historial de sesiones */}
+      {sesionesList.length > 0 && (
+        <div style={{ background: '#0f172a', border: '1px solid #1f2937', borderRadius: 14, overflow: 'hidden' }}>
+          <button
+            onClick={() => setAbierto(v => !v)}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#f1f5f9' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Historial de sesiones</span>
+              <span style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 10, padding: '1px 8px', fontSize: '0.72rem', color: '#a855f7' }}>{sesionesList.length}</span>
+            </div>
+            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{abierto ? '▲' : '▼'}</span>
+          </button>
+
+          {abierto && (
+            <div style={{ borderTop: '1px solid #1f2937' }}>
+              {sesionesList.map((s, i) => {
+                const diag = s.diagnostico || {};
+                const fechaStr = s.fecha ? new Date(s.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                const isOpen = sesionAbierta === s.key;
+                return (
+                  <div key={s.key} style={{ borderBottom: i < sesionesList.length - 1 ? '1px solid #1f2937' : 'none' }}>
+                    <button
+                      onClick={() => setSesionAbierta(isOpen ? null : s.key)}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                      <div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#f1f5f9' }}>{s.area || s.cuestionarioId || s.key}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: 2 }}>
+                          {fechaStr}
+                          {s.pct != null && <span style={{ marginLeft: 10, color: '#38bdf8' }}>{s.pct}% aciertos</span>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {diag.patron_detectado && (
+                          <span style={{ fontSize: '0.68rem', background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 10, padding: '2px 8px', color: '#a855f7' }}>
+                            {diag.patron_detectado.replace(/_/g, ' ')}
+                          </span>
+                        )}
+                        <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{isOpen ? '▲' : '▼'}</span>
+                      </div>
+                    </button>
+
+                    {isOpen && (
+                      <div style={{ padding: '0 18px 16px' }}>
+                        {diag.resumen_publico && (
+                          <div style={{ fontSize: '0.8rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 10 }}>{diag.resumen_publico}</div>
+                        )}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                          {diag.fortaleza && (
+                            <div style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 8, padding: '8px 10px' }}>
+                              <div style={{ fontSize: '0.65rem', color: '#4ade80', fontWeight: 600, marginBottom: 3 }}>✅ Fortaleza</div>
+                              <div style={{ fontSize: '0.75rem', color: '#d1d5db' }}>{diag.fortaleza}</div>
+                            </div>
+                          )}
+                          {diag.area_trabajo && (
+                            <div style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 8, padding: '8px 10px' }}>
+                              <div style={{ fontSize: '0.65rem', color: '#fbbf24', fontWeight: 600, marginBottom: 3 }}>🎯 A trabajar</div>
+                              <div style={{ fontSize: '0.75rem', color: '#d1d5db' }}>{diag.area_trabajo}</div>
+                            </div>
+                          )}
+                        </div>
+                        {diag.items_fallados?.length > 0 && (
+                          <div style={{ background: '#1f2937', borderRadius: 8, padding: '10px 12px', marginBottom: 10 }}>
+                            <div style={{ fontSize: '0.68rem', color: '#f87171', fontWeight: 600, marginBottom: 6 }}>Ítems con dificultad ({diag.items_fallados.length})</div>
+                            {diag.items_fallados.map((it, j) => (
+                              <div key={j} style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 4, paddingLeft: 8, borderLeft: '2px solid #374151' }}>
+                                <span style={{ color: '#f1f5f9' }}>{it.item}</span>
+                                {it.interpretacion && <span style={{ color: '#6b7280' }}> — {it.interpretacion}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {diag.mensaje_estudiante && (
+                          <div style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: '0.78rem', color: '#38bdf8', lineHeight: 1.5 }}>
+                            💬 {diag.mensaje_estudiante}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Portal() {
   const [modalSesion, setModalSesion] = useState(null);
   const { uid, perfil, loading: loadingPerfil, modoAcceso, setModoAcceso, buscarPorDocumento, perfilManual } = useEstudiante();
@@ -415,6 +591,8 @@ if (modoAcceso === 'pendiente_manual') {
     </div>
   </div>
 )}
+
+        <SeccionPmap pmap={pmap} />
 
         <GrabacionesEstudiante
           uid={uid}
