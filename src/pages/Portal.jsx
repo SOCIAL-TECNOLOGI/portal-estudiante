@@ -2,10 +2,10 @@ import { auth } from '../firebase';
 import { useState, useEffect } from 'react';
 import { useEstudiante } from '../hooks/useEstudiante';
 import { useRuta } from '../hooks/useRuta';
+import { usePmap } from '../hooks/usePmap';
 import CuestionarioCard from '../components/CuestionarioCard';
 import { db } from '../firebase';
-import { ref, onValue, set, query, orderByChild, equalTo } from 'firebase/database';
-import GrabacionesEstudiante from '../components/GrabacionesEstudiante';
+import { ref, onValue, set } from 'firebase/database';
 
 const MUNDOS = {
   N1: { titulo: 'Mundo 1 — Reconocimiento', sub: 'Localizar, identificar y relacionar información explícita', color: '#16a34a' },
@@ -18,27 +18,22 @@ export default function Portal() {
   const [modalSesion, setModalSesion] = useState(null);
   const { uid, perfil, loading: loadingPerfil, modoAcceso, setModoAcceso, buscarPorDocumento, perfilManual } = useEstudiante();
   const { porNivel, loading: loadingRuta } = useRuta(uid, perfil);
+  const { pmap } = usePmap(uid);
   const [solicitud, setSolicitud] = useState(null);
   const [loadingSolicitud, setLoadingSolicitud] = useState(true);
   const [enviando, setEnviando] = useState(false);
 
   // Escuchar estado de solicitud
   useEffect(() => {
-    console.log('useEffect solicitud:', { uid, perfilManual });
     if (!uid) return;
-    if (!perfilManual) {
-      setLoadingSolicitud(false);
-      return;
-    }
-    setLoadingSolicitud(true);
     const solRef = ref(db, `solicitudes_portal/${uid}`);
     const unsub = onValue(solRef, snap => {
       setSolicitud(snap.val());
-      console.log('Solicitud uid:', uid, snap.val());
       setLoadingSolicitud(false);
     });
     return () => unsub();
-  }, [uid, perfilManual]);
+  }, [uid]);
+
 const enviarSolicitud = async () => {
     if (!perfil) return;
     setEnviando(true);
@@ -213,7 +208,7 @@ if (modoAcceso === 'pendiente_manual') {
 
   
   // PENDIENTE — solo si no entró por documento
-  if (!perfilManual && (!solicitud || solicitud?.estado === 'pendiente')) {
+  if (!perfilManual && (!solicitud || solicitud.estado === 'pendiente')) {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -251,7 +246,7 @@ if (modoAcceso === 'pendiente_manual') {
   }
 
   // RECHAZADO
-  if (solicitud?.estado === 'rechazado') {
+  if (solicitud.estado === 'rechazado') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -266,7 +261,7 @@ if (modoAcceso === 'pendiente_manual') {
   }
 
   // SUSPENDIDO
-  if (solicitud?.estado === 'suspendido') {
+  if (solicitud.estado === 'suspendido') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -284,7 +279,7 @@ if (modoAcceso === 'pendiente_manual') {
   }
 
   // BLOQUEADO
-  if (solicitud?.estado === 'bloqueado') {
+  if (solicitud.estado === 'bloqueado') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
         <div style={{ textAlign: 'center', maxWidth: 380, background: '#0f172a', border: '1px solid #1f2937', borderRadius: 18, padding: 32 }}>
@@ -373,33 +368,46 @@ if (modoAcceso === 'pendiente_manual') {
     <div onClick={e => e.stopPropagation()} style={{ background: '#0f172a', border: '1px solid #1f2937', borderRadius: 16, padding: 24, maxWidth: 420, width: '100%' }}>
       <div style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 600, marginBottom: 4 }}>✅ Completado</div>
       <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f1f5f9', marginBottom: 16 }}>{modalSesion.nombre}</div>
-      {(modalSesion?.sesion?.diagnostico?.resumen_publico || perfil?.trayectoria?.resumen_publico) && (
-        <div style={{ fontSize: '0.82rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 16 }}>
-          {modalSesion?.sesion?.diagnostico?.resumen_publico || perfil?.trayectoria?.resumen_publico}
-        </div>
-      )}
-      {(modalSesion?.sesion?.diagnostico?.mensaje_estudiante || perfil?.trayectoria?.mensaje_estudiante) && (
-        <div style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: '0.82rem', color: '#38bdf8', lineHeight: 1.6, marginBottom: 16 }}>
-          💬 {modalSesion?.sesion?.diagnostico?.mensaje_estudiante || perfil?.trayectoria?.mensaje_estudiante}
-        </div>
-      )}
-
-      {perfil?.trayectoria?.mensaje_estudiante && (
-        <div style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: '0.82rem', color: '#38bdf8', lineHeight: 1.6, marginBottom: 16 }}>
-          💬 {perfil.trayectoria.mensaje_estudiante}
-        </div>
-      )}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1, background: '#1f2937', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f1f5f9' }}>{modalSesion?.sesion?.pct ?? perfil?.progreso?.general ?? 0}%</div>
-          <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>aciertos</div>
-        </div>
-        <div style={{ flex: 1, background: '#1f2937', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f1f5f9' }}>{modalSesion?.sesion?.diagnostico?.patron_detectado || perfil?.trayectoria?.patron_detectado || '—'}</div>
-
-          <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>patrón</div>
-        </div>
-      </div>
+      {(() => {
+        // Buscar diagnóstico PMAP de Docente-1 para esta sesión
+        const sesionKey = modalSesion?.id?.replace(/\//g, '_');
+        const pmapSesion = sesionKey && pmap?.sesiones?.[sesionKey];
+        const patron = pmapSesion?.patron_detectado || modalSesion?.sesion?.diagnostico?.patron_detectado || pmap?.trayectoria?.patron_detectado || perfil?.trayectoria?.patron_detectado || '—';
+        const mensaje = pmapSesion?.mensaje_estudiante || modalSesion?.sesion?.diagnostico?.mensaje_estudiante || pmap?.trayectoria?.mensaje_estudiante || perfil?.trayectoria?.mensaje_estudiante;
+        const resumen = pmapSesion?.resumen_publico || modalSesion?.sesion?.diagnostico?.resumen_publico || pmap?.trayectoria?.resumen_publico || perfil?.trayectoria?.resumen_publico;
+        const aciertos = modalSesion?.sesion?.pct ?? perfil?.progreso?.general ?? 0;
+        const itemsFallados = pmapSesion?.items_fallados ?? null;
+        return (
+          <>
+            {resumen && (
+              <div style={{ fontSize: '0.82rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 16 }}>
+                {resumen}
+              </div>
+            )}
+            {mensaje && (
+              <div style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: '0.82rem', color: '#38bdf8', lineHeight: 1.6, marginBottom: 16 }}>
+                💬 {mensaje}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ flex: 1, background: '#1f2937', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f1f5f9' }}>{aciertos}%</div>
+                <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>aciertos</div>
+              </div>
+              <div style={{ flex: 1, background: '#1f2937', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f1f5f9' }}>{patron}</div>
+                <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>patrón</div>
+              </div>
+              {itemsFallados !== null && (
+                <div style={{ flex: 1, background: '#1f2937', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f87171' }}>{itemsFallados}</div>
+                  <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>fallados</div>
+                </div>
+              )}
+            </div>
+          </>
+        );
+      })()}
       <button onClick={() => setModalSesion(null)} style={{ width: '100%', marginTop: 16, padding: '0.75rem', borderRadius: 40, background: '#1f2937', color: '#9ca3af', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}>
         Cerrar
       </button>
@@ -407,7 +415,6 @@ if (modoAcceso === 'pendiente_manual') {
   </div>
 )}
 
-                            <GrabacionesEstudiante uid={uid} institucion={perfil.datos?.institucion || ''} grado={perfil.datos?.grado || ''} />
         <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.72rem', marginTop: 32, paddingTop: 20, borderTop: '1px solid #1f2937' }}>
           SITE-RUTA LATAM · Fedusocial · Universidad del Tolima
         </div>
