@@ -254,6 +254,7 @@ function Microrrutinas({ onCuenta }) {
           <div onClick={() => setAbierta(abierta === m.id ? null : m.id)} style={{ cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#f1f5f9' }}>{m.hecha ? '✅ ' : ''}{m.titulo}</div>
+              {m.habilidad && <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: 3 }}>🎯 {m.habilidad}</div>}
               <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 2 }}>{m.area} · {m.minutos} min</div>
             </div>
             <div style={{ color: '#38bdf8', fontSize: '0.8rem' }}>{abierta === m.id ? '▲' : '▼'}</div>
@@ -267,6 +268,12 @@ function Microrrutinas({ onCuenta }) {
               <div style={{ background: '#020617', border: '1px solid #1f2937', borderRadius: 10, padding: '10px 12px', marginBottom: 10, whiteSpace: 'pre-wrap' }}>{m.ejercicio}</div>
               <div style={{ fontWeight: 600, color: '#f1f5f9', marginBottom: 4 }}>Revisa tu trabajo</div>
               <ul style={{ margin: '0 0 12px 18px', padding: 0 }}>{(m.autoverificacion || []).map((p, k) => <li key={k} style={{ marginBottom: 4 }}>{p}</li>)}</ul>
+              {(m.temas_sugeridos || []).length > 0 && (
+                <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 10, padding: '8px 12px', marginBottom: 12, fontSize: '0.8rem' }}>
+                  <div style={{ fontWeight: 600, color: '#fbbf24', marginBottom: 4 }}>📚 Temas para repasar aparte</div>
+                  {m.temas_sugeridos.map((t, k) => <div key={k}>• {t}</div>)}
+                </div>
+              )}
               {!m.hecha && <button style={{ ...btnAzul, width: '100%' }} onClick={() => marcar(m.id)}>✅ Ya la hice</button>}
             </div>
           )}
