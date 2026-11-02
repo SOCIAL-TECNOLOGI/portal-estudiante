@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/pdfs/:archivo*", "destination": "https://alau.fedusocial.org/pdfs/:archivo*" }
+  ]
+}

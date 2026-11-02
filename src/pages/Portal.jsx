@@ -3,6 +3,7 @@ import { useSesionPortal } from '../hooks/useSesionPortal';
 import { useRuta } from '../hooks/useRuta';
 import CuestionarioCard from '../components/CuestionarioCard';
 import GrabacionesEstudiante from '../components/GrabacionesEstudiante';
+import Evaluaciones from '../components/Evaluaciones';
 import Entrada, { Pantalla } from '../components/Entrada';
 
 const MUNDOS = {
@@ -236,6 +237,8 @@ export default function Portal() {
             </div>
           </div>
         </div>
+
+        <Evaluaciones />
 
         {Object.entries(MUNDOS).map(([nivel, mundo]) => {
           const cuests = porNivel[nivel] || [];
