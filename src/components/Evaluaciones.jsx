@@ -19,7 +19,7 @@ function Aviso({ texto, tipo }) {
 }
 
 // Una página del PDF dibujada con pdf.js (página N = pregunta N)
-function PaginaPdf({ pdf, pagina }) {
+function PaginaPdf({ pdf, pagina, visor }) {
   const ref = useRef(null);
   const [estado, setEstado] = useState('cargando');
   useEffect(() => {
@@ -47,9 +47,10 @@ function PaginaPdf({ pdf, pagina }) {
       <canvas ref={ref} style={{ display: estado === 'listo' ? 'block' : 'none' }} />
       {estado !== 'listo' && (
         <div style={{ color: '#475569', fontSize: '0.85rem', padding: 24, textAlign: 'center' }}>
-          {estado === 'cargando' ? 'Cargando la pregunta…' : estado === 'sin_pagina' ? 'Esta pregunta no está en el documento.' : 'No pudimos mostrar el documento. Revisa tu conexión y vuelve a abrirlo.'}
+          {estado === 'cargando' ? 'Cargando la pregunta…' : estado === 'sin_pagina' ? 'Esta pregunta no está en el documento.' : 'No pudimos mostrar la pregunta sola.'}
         </div>
       )}
+      {estado === 'error' && visor && <DocumentoCompleto pdf={visor} n={pagina} />}
     </div>
   );
 }
@@ -188,7 +189,7 @@ function Reproductor({ ev, onSalir, onEntregado }) {
         </div>
       </div>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '14px 16px 40px' }}>
-        {info.modo === 'paginas' ? <PaginaPdf pdf={info.pdf} pagina={n} /> : info.modo === 'documento' ? <DocumentoCompleto pdf={info.pdf} n={n} /> : <div style={{ color: '#9ca3af' }}>Este cuestionario no tiene documento.</div>}
+        {info.modo === 'paginas' ? <PaginaPdf pdf={info.pdf} pagina={n} visor={info.visor} /> : info.modo === 'documento' ? <DocumentoCompleto pdf={info.pdf} n={n} /> : <div style={{ color: '#9ca3af' }}>Este cuestionario no tiene documento.</div>}
         <Opciones valor={resp[n]} onElegir={elegir} deshabilitado={enviando} />
         <Aviso texto={aviso} />
         <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
@@ -261,7 +262,7 @@ function Refuerzo({ onSalir }) {
         ) : p && (
           <div>
             <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: 6 }}>{p.area} · de «{p.nombre}», pregunta {p.n}</div>
-            {p.modo === 'paginas' ? <PaginaPdf pdf={p.pdf} pagina={p.n} /> : <DocumentoCompleto pdf={p.pdf} n={p.n} />}
+            {p.modo === 'paginas' ? <PaginaPdf pdf={p.pdf} pagina={p.n} visor={p.visor} /> : <DocumentoCompleto pdf={p.pdf} n={p.n} />}
             <Opciones valor={elegida} onElegir={responder} deshabilitado={!!res} correcta={res?.correcta} />
             {res && <Aviso tipo={res.acierto ? 'ok' : 'err'} texto={res.acierto ? '¡Correcto!' : `La respuesta correcta es ${res.correcta}.`} />}
             {res && <button style={{ ...btnAzul, width: '100%' }} onClick={siguiente}>{i < lista.length - 1 ? 'Siguiente →' : 'Terminar ronda'}</button>}

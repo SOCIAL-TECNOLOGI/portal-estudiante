@@ -35,7 +35,12 @@ export function cargarPdf(url) {
     });
   }
   if (!documentos.has(url)) {
-    const p = pdfjsPromesa.then(m => m.getDocument(encodeURI(url)).promise);
+    // Los PDF de los cuestionarios los entrega el servidor del portal (con la sesión del estudiante)
+    const p = pdfjsPromesa.then(async m => {
+      if (!url.startsWith('/api/')) return m.getDocument(encodeURI(url)).promise;
+      const token = await auth.currentUser.getIdToken();
+      return m.getDocument({ url: API + url, httpHeaders: { Authorization: 'Bearer ' + token }, disableRange: true, disableStream: true }).promise;
+    });
     p.catch(() => documentos.delete(url));
     documentos.set(url, p);
   }
