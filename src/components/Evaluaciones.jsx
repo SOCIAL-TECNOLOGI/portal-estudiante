@@ -220,6 +220,62 @@ function Reproductor({ ev, onSalir, onEntregado }) {
   );
 }
 
+// Microrrutinas (redactadas por Gemini a partir de cada error; borrador revisable por el docente)
+function Microrrutinas({ onCuenta }) {
+  const [datos, setDatos] = useState(null);
+  const [abierta, setAbierta] = useState(null);
+  const [aviso, setAviso] = useState('');
+  const intentos = useRef(0);
+  const cargar = useCallback(() => {
+    api('/api/portal/microrrutinas').then(d => { setDatos(d); if (onCuenta) onCuenta(d); }).catch(e => setAviso(e.message));
+  }, [onCuenta]);
+  useEffect(() => { cargar(); }, [cargar]);
+  // Mientras Gemini prepara las que faltan, se vuelve a consultar cada 8 s (máximo 12 veces)
+  useEffect(() => {
+    if (!datos?.preparando || intentos.current >= 12) return;
+    const t = setTimeout(() => { intentos.current++; cargar(); }, 8000);
+    return () => clearTimeout(t);
+  }, [datos, cargar]);
+  const marcar = async id => {
+    try { await api(`/api/portal/microrrutinas/${encodeURIComponent(id)}/hecha`, {}); setDatos(d => ({ ...d, microrrutinas: d.microrrutinas.map(m => m.id === id ? { ...m, hecha: true } : m) })); setAbierta(null); }
+    catch (e) { setAviso(e.message); }
+  };
+  if (!datos) return <Aviso texto={aviso} />;
+  const lista = datos.microrrutinas || [];
+  if (!lista.length && !datos.preparando) return null;
+  return (
+    <div style={{ marginTop: 18 }}>
+      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f1f5f9', marginBottom: 4 }}>🧩 Actividades para fortalecer</div>
+      <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: 10 }}>Sugeridas a partir de tus errores. Hazlas en tu cuaderno.</div>
+      <Aviso texto={aviso} />
+      {datos.preparando > 0 && <div style={{ fontSize: '0.8rem', color: '#fbbf24', marginBottom: 10 }}>⏳ Preparando {datos.preparando} actividad{datos.preparando === 1 ? '' : 'es'} más para ti…</div>}
+      {lista.map(m => (
+        <div key={m.id} style={{ ...caja, opacity: m.hecha ? 0.6 : 1 }}>
+          <div onClick={() => setAbierta(abierta === m.id ? null : m.id)} style={{ cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#f1f5f9' }}>{m.hecha ? '✅ ' : ''}{m.titulo}</div>
+              <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 2 }}>{m.area} · {m.minutos} min</div>
+            </div>
+            <div style={{ color: '#38bdf8', fontSize: '0.8rem' }}>{abierta === m.id ? '▲' : '▼'}</div>
+          </div>
+          {abierta === m.id && (
+            <div style={{ fontSize: '0.84rem', color: '#d1d5db', lineHeight: 1.6, marginTop: 10 }}>
+              <div style={{ marginBottom: 10 }}>{m.que_paso}</div>
+              <div style={{ fontWeight: 600, color: '#f1f5f9', marginBottom: 4 }}>Pasos</div>
+              <ol style={{ margin: '0 0 10px 18px', padding: 0 }}>{(m.pasos || []).map((p, k) => <li key={k} style={{ marginBottom: 4 }}>{p}</li>)}</ol>
+              <div style={{ fontWeight: 600, color: '#f1f5f9', marginBottom: 4 }}>Ejercicio</div>
+              <div style={{ background: '#020617', border: '1px solid #1f2937', borderRadius: 10, padding: '10px 12px', marginBottom: 10, whiteSpace: 'pre-wrap' }}>{m.ejercicio}</div>
+              <div style={{ fontWeight: 600, color: '#f1f5f9', marginBottom: 4 }}>Revisa tu trabajo</div>
+              <ul style={{ margin: '0 0 12px 18px', padding: 0 }}>{(m.autoverificacion || []).map((p, k) => <li key={k} style={{ marginBottom: 4 }}>{p}</li>)}</ul>
+              {!m.hecha && <button style={{ ...btnAzul, width: '100%' }} onClick={() => marcar(m.id)}>✅ Ya la hice</button>}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Refuerzo: preguntas de la misma microhabilidad que falló, con retroalimentación inmediata
 function Refuerzo({ onSalir }) {
   const [lista, setLista] = useState(null);
@@ -230,6 +286,8 @@ function Refuerzo({ onSalir }) {
   const [aviso, setAviso] = useState('');
   const [cierre, setCierre] = useState(null);
   const desde = useRef(Date.now());
+  const [hayMicro, setHayMicro] = useState(false);
+  const cuentaMicro = useCallback(d => setHayMicro(!!((d.microrrutinas || []).length || d.preparando)), []);
 
   useEffect(() => { api('/api/portal/refuerzo').then(d => { setLista(d.preguntas); setPendientesMh(d.microhabilidades || 0); }).catch(e => setAviso(e.message)); }, []);
 
@@ -253,7 +311,7 @@ function Refuerzo({ onSalir }) {
           <button style={{ ...btnGris, padding: '0.45rem 0.8rem', fontSize: '0.75rem' }} onClick={onSalir}>Salir</button>
         </div>
         <Aviso texto={aviso} />
-        {lista && !lista.length && (
+        {lista && !lista.length && !hayMicro && (
           <div style={{ color: '#d1d5db', fontSize: '0.88rem', lineHeight: 1.6 }}>
             {pendientesMh > 0
               ? `Tienes ${pendientesMh} microhabilidad${pendientesMh === 1 ? '' : 'es'} por fortalecer. Pronto se te asignarán actividades y preguntas de refuerzo para trabajarlas.`
@@ -275,6 +333,7 @@ function Refuerzo({ onSalir }) {
             {res && <button style={{ ...btnAzul, width: '100%' }} onClick={siguiente}>{i < lista.length - 1 ? 'Siguiente →' : 'Terminar ronda'}</button>}
           </div>
         )}
+        {(!p || cierre) && <Microrrutinas onCuenta={cuentaMicro} />}
       </div>
     </div>
   );
