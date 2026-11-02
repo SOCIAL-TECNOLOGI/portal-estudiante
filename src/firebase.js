@@ -15,7 +15,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-if (typeof window !== 'undefined') {
+// Token de depuración de App Check SOLO en desarrollo local (npm run dev); en producción usa reCAPTCHA v3
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
   window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
 }
 

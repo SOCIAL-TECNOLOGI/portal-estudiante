@@ -1,41 +1,11 @@
 import { useState } from 'react';
-import { db } from '../firebase';
-import { ref, get } from 'firebase/database';
 
-const PMAP_URL = 'https://motor1.alau.fedusocial.org';
-
-export default function GrabacionesEstudiante({ uid, institucion, grado }) {
+// Recibe las grabaciones ya filtradas por el servidor (clases de los grados en que participó)
+export default function GrabacionesEstudiante({ grabaciones = [] }) {
   const [abierto, setAbierto] = useState(false);
-  const [grabaciones, setGrabaciones] = useState([]);
-  const [cargando, setCargando] = useState(false);
   const [videoActivo, setVideoActivo] = useState(null);
-  
-  
-   const cargar = async () => {
-    if (abierto) { setAbierto(false); return; }
-    setCargando(true);
-    setAbierto(true);
-    try {
-      const r = await fetch(PMAP_URL + '/api/grabaciones');
-      const d = await r.json();
-      if (!d.ok || !d.grabaciones?.length) { setGrabaciones([]); setCargando(false); return; }
-      const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const instNorm = norm(institucion);
-      const gradNorm = norm(grado);
-      console.log('inst:', institucion, '→', instNorm, '| grado:', grado, '→', gradNorm);
-           const filtradas = instNorm
-        ? d.grabaciones.filter(g => {
-            const instMatch = norm(g.institucion).includes(instNorm.slice(0,6));
-            const gradMatch = gradNorm ? norm(g.grado) === gradNorm : true;
-            return instMatch && gradMatch;
-          })
-        : d.grabaciones;
-      setGrabaciones(filtradas);
-    } catch(e) {
-      setGrabaciones([]);
-    }
-    setCargando(false);
-  };
+  const cargando = false;
+  const cargar = () => setAbierto(v => !v);
 
 
 

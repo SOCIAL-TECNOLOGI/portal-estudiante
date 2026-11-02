@@ -38,7 +38,7 @@ function calcularEstadoCuestionario(cuestionario, perfil, sesiones) {
   return 'available';
 }
 
-export function useRuta(uid, perfil) {
+export function useRuta(perfil, sesiones) {
   const [cuestionarios, setCuestionarios] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,16 +58,7 @@ export function useRuta(uid, perfil) {
     return () => unsub();
   }, []);
 
-  const [sesiones, setSesiones] = useState([]);
-  useEffect(() => {
-    if (!uid) return;
-    const sesRef = ref(db, `estudiantes/${uid}/sesiones`);
-    const unsub = onValue(sesRef, (snap) => {
-      const data = snap.val() || {};
-      setSesiones(Object.values(data));
-    });
-    return () => unsub();
-  }, [uid]);
+  // Las sesiones (de todos sus dispositivos) llegan del servidor del portal
 
 
   const rutaCalculada = cuestionarios.map(c => {
