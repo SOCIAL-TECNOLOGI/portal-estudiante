@@ -223,6 +223,7 @@ function Reproductor({ ev, onSalir, onEntregado }) {
 // Refuerzo: preguntas de la misma microhabilidad que falló, con retroalimentación inmediata
 function Refuerzo({ onSalir }) {
   const [lista, setLista] = useState(null);
+  const [pendientesMh, setPendientesMh] = useState(0);
   const [i, setI] = useState(0);
   const [elegida, setElegida] = useState('');
   const [res, setRes] = useState(null);
@@ -230,7 +231,7 @@ function Refuerzo({ onSalir }) {
   const [cierre, setCierre] = useState(null);
   const desde = useRef(Date.now());
 
-  useEffect(() => { api('/api/portal/refuerzo').then(d => setLista(d.preguntas)).catch(e => setAviso(e.message)); }, []);
+  useEffect(() => { api('/api/portal/refuerzo').then(d => { setLista(d.preguntas); setPendientesMh(d.microhabilidades || 0); }).catch(e => setAviso(e.message)); }, []);
 
   const p = lista?.[i];
   const responder = async o => {
@@ -252,7 +253,13 @@ function Refuerzo({ onSalir }) {
           <button style={{ ...btnGris, padding: '0.45rem 0.8rem', fontSize: '0.75rem' }} onClick={onSalir}>Salir</button>
         </div>
         <Aviso texto={aviso} />
-        {lista && !lista.length && <div style={{ color: '#9ca3af', fontSize: '0.88rem' }}>Por ahora no tienes preguntas de refuerzo pendientes. 🎉</div>}
+        {lista && !lista.length && (
+          <div style={{ color: '#d1d5db', fontSize: '0.88rem', lineHeight: 1.6 }}>
+            {pendientesMh > 0
+              ? `Tienes ${pendientesMh} microhabilidad${pendientesMh === 1 ? '' : 'es'} por fortalecer. Pronto se te asignarán actividades y preguntas de refuerzo para trabajarlas.`
+              : 'Aún no tienes microhabilidades para reforzar. Cuando presentes evaluaciones, aquí aparecerá tu práctica.'}
+          </div>
+        )}
         {cierre ? (
           <div>
             <div style={{ color: '#f1f5f9', marginBottom: 10 }}>¡Terminaste esta ronda!</div>
