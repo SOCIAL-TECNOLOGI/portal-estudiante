@@ -196,14 +196,14 @@ function Reproductor({ ev, onSalir, onEntregado }) {
           <button style={{ ...btnGris, flex: 1 }} disabled={i === 0} onClick={() => ir(i - 1)}>← Anterior</button>
           {i < total - 1
             ? <button style={{ ...btnAzul, flex: 1 }} onClick={() => ir(i + 1)}>Siguiente →</button>
-            : <button style={{ ...btnAzul, flex: 1 }} onClick={() => setConfirmar(true)}>Entregar</button>}
+            : <button style={{ ...btnAzul, flex: 1, opacity: confirmar ? 0.4 : 1 }} disabled={confirmar} onClick={() => setConfirmar(true)}>Terminar</button>}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
           {info.preguntas.map((p, j) => (
             <button key={p} onClick={() => ir(j)} style={{ width: 36, height: 36, borderRadius: 8, border: j === i ? '2px solid #38bdf8' : '1px solid #1f2937', background: resp[p] ? 'rgba(56,189,248,0.2)' : '#0f172a', color: '#e5e7eb', fontSize: '0.75rem', cursor: 'pointer' }}>{p}</button>
           ))}
         </div>
-        {i < total - 1 && <button style={{ ...btnGris, width: '100%' }} onClick={() => setConfirmar(true)}>Entregar ahora</button>}
+        {i < total - 1 && !confirmar && <button style={{ ...btnGris, width: '100%' }} onClick={() => setConfirmar(true)}>Terminar ahora</button>}
         {confirmar && (
           <div style={{ ...caja, marginTop: 14, border: '1px solid #38bdf8' }}>
             <div style={{ fontSize: '0.88rem', color: '#f1f5f9', marginBottom: 10 }}>
