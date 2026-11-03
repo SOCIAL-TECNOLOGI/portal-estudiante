@@ -84,12 +84,13 @@ function Opciones({ valor, onElegir, deshabilitado, correcta }) {
 }
 
 // Resultado: puntaje, tus respuestas y las correctas (como el modal de fin de clase en AlaU)
-function Resultado({ r, titulo, onCerrar, onRefuerzo }) {
+function Resultado({ r, titulo, onCerrar, onRefuerzo, onRepetir }) {
   const fallos = (r.detalle || []).filter(d => d.acierto === false).length;
+  const sinValidez = r.validez === 'ritmo_muy_rapido';   // respondido casi todo en ≤5 s: no se usa para diagnosticar
   return (
     <div style={capa}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px' }}>
-        <div style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 600 }}>✅ Entregado</div>
+        <div style={{ fontSize: '0.75rem', color: sinValidez ? '#fbbf24' : '#38bdf8', fontWeight: 600 }}>{sinValidez ? '⚠️ Entregado, pero sin validez para tu diagnóstico' : '✅ Entregado'}</div>
         <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f1f5f9', margin: '4px 0 16px' }}>{titulo}</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <div style={{ flex: 1, ...caja, marginBottom: 0, textAlign: 'center' }}>
@@ -116,7 +117,8 @@ function Resultado({ r, titulo, onCerrar, onRefuerzo }) {
             </div>
           ))}
         </div>
-        {fallos > 0 && onRefuerzo && <button style={{ ...btnAzul, width: '100%', marginBottom: 10 }} onClick={onRefuerzo}>💪 Practicar lo que fallé</button>}
+        {sinValidez && r.reintento && onRepetir && <button style={{ ...btnAzul, width: '100%', marginBottom: 10 }} onClick={onRepetir}>🔁 Repetir con calma (última oportunidad)</button>}
+        {!sinValidez && fallos > 0 && onRefuerzo && <button style={{ ...btnAzul, width: '100%', marginBottom: 10 }} onClick={onRefuerzo}>💪 Practicar lo que fallé</button>}
         <button style={{ ...btnGris, width: '100%' }} onClick={onCerrar}>Volver al portal</button>
       </div>
     </div>
@@ -399,12 +401,13 @@ export default function Evaluaciones() {
 
   const cerrar = () => { setVista(null); cargar(); };
   const verResultado = async ev => {
-    try { setVista({ tipo: 'resultado', titulo: ev.nombre, r: await api(`/api/portal/evaluaciones/${encodeURIComponent(ev.id)}/entregar`, {}) }); }
+    try { setVista({ tipo: 'resultado', titulo: ev.nombre, ev, r: await api(`/api/portal/evaluaciones/${encodeURIComponent(ev.id)}/entregar`, {}) }); }
     catch (e) { setAviso(e.message); }
   };
 
-  if (vista?.tipo === 'presentar') return <Reproductor ev={vista.ev} onSalir={cerrar} onEntregado={r => setVista({ tipo: 'resultado', titulo: vista.ev.nombre, r })} />;
-  if (vista?.tipo === 'resultado') return <Resultado r={vista.r} titulo={vista.titulo} onCerrar={cerrar} onRefuerzo={() => setVista({ tipo: 'refuerzo' })} />;
+  if (vista?.tipo === 'presentar') return <Reproductor ev={vista.ev} onSalir={cerrar} onEntregado={r => setVista({ tipo: 'resultado', titulo: vista.ev.nombre, ev: vista.ev, r })} />;
+  if (vista?.tipo === 'resultado') return <Resultado r={vista.r} titulo={vista.titulo} onCerrar={cerrar} onRefuerzo={() => setVista({ tipo: 'refuerzo' })}
+    onRepetir={vista.ev ? () => setVista({ tipo: 'presentar', ev: vista.ev }) : null} />;
   if (vista?.tipo === 'refuerzo') return <Refuerzo onSalir={cerrar} />;
   if (vista?.tipo === 'hoja') return <Hoja hoja={vista.hoja} onSalir={cerrar} onEntregado={r => setVista({ tipo: 'resultado', titulo: vista.hoja.nombre, r })} />;
 
@@ -431,7 +434,10 @@ export default function Evaluaciones() {
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9' }}>{ev.nombre}</div>
             <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{ev.total} preguntas · {ev.minutos} min{ev.deTuClase ? ' · de tu clase' : ''}</div>
             {ev.estado === 'entregado'
-              ? <button style={btnGris} onClick={() => verResultado(ev)}>Ver resultado · {ev.resultado?.pct ?? 0}%</button>
+              ? <>
+                  <button style={btnGris} onClick={() => verResultado(ev)}>{ev.resultado?.validez === 'ritmo_muy_rapido' ? 'Ver resultado · sin validez' : `Ver resultado · ${ev.resultado?.pct ?? 0}%`}</button>
+                  {ev.reintento && <button style={btnAzul} onClick={() => setVista({ tipo: 'presentar', ev })}>🔁 Repetir con calma</button>}
+                </>
               : ev.estado === 'en_curso'
                 ? <button style={btnAzul} onClick={() => setVista({ tipo: 'presentar', ev })}>Continuar</button>
                 : porIniciar === ev.id
