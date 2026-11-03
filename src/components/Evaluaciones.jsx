@@ -385,6 +385,19 @@ function Hoja({ hoja, onSalir, onEntregado }) {
   );
 }
 
+// Confirmación antes de que empiece a correr el tiempo
+function Confirmar({ texto, onNo, onSi }) {
+  return (
+    <div>
+      <div style={{ fontSize: '0.75rem', color: '#fbbf24', marginBottom: 8, lineHeight: 1.5 }}>{texto}</div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button style={{ ...btnGris, flex: 1 }} onClick={onNo}>Ahora no</button>
+        <button style={{ ...btnAzul, flex: 1 }} onClick={onSi}>Empezar</button>
+      </div>
+    </div>
+  );
+}
+
 // Sección del portal
 export default function Evaluaciones() {
   const [evs, setEvs] = useState(null);
@@ -407,7 +420,7 @@ export default function Evaluaciones() {
 
   if (vista?.tipo === 'presentar') return <Reproductor ev={vista.ev} onSalir={cerrar} onEntregado={r => setVista({ tipo: 'resultado', titulo: vista.ev.nombre, ev: vista.ev, r })} />;
   if (vista?.tipo === 'resultado') return <Resultado r={vista.r} titulo={vista.titulo} onCerrar={cerrar} onRefuerzo={() => setVista({ tipo: 'refuerzo' })}
-    onRepetir={vista.ev ? () => setVista({ tipo: 'presentar', ev: vista.ev }) : null} />;
+    onRepetir={vista.ev ? () => { setPorIniciar(vista.ev.id); cerrar(); } : null} />;
   if (vista?.tipo === 'refuerzo') return <Refuerzo onSalir={cerrar} />;
   if (vista?.tipo === 'hoja') return <Hoja hoja={vista.hoja} onSalir={cerrar} onEntregado={r => setVista({ tipo: 'resultado', titulo: vista.hoja.nombre, r })} />;
 
@@ -436,18 +449,16 @@ export default function Evaluaciones() {
             {ev.estado === 'entregado'
               ? <>
                   <button style={btnGris} onClick={() => verResultado(ev)}>{ev.resultado?.validez === 'ritmo_muy_rapido' ? 'Ver resultado · sin validez' : `Ver resultado · ${ev.resultado?.pct ?? 0}%`}</button>
-                  {ev.reintento && <button style={btnAzul} onClick={() => setVista({ tipo: 'presentar', ev })}>🔁 Repetir con calma</button>}
+                  {ev.reintento && (porIniciar === ev.id
+                    ? <Confirmar ev={ev} texto={`Es tu último intento. Tendrás ${ev.minutos} minutos y el tiempo corre aunque salgas. Lee cada pregunta completa antes de marcar.`}
+                        onNo={() => setPorIniciar(null)} onSi={() => { setPorIniciar(null); setVista({ tipo: 'presentar', ev }); }} />
+                    : <button style={btnAzul} onClick={() => setPorIniciar(ev.id)}>🔁 Repetir con calma</button>)}
                 </>
               : ev.estado === 'en_curso'
                 ? <button style={btnAzul} onClick={() => setVista({ tipo: 'presentar', ev })}>Continuar</button>
                 : porIniciar === ev.id
-                  ? <div>
-                      <div style={{ fontSize: '0.75rem', color: '#fbbf24', marginBottom: 8, lineHeight: 1.5 }}>Tendrás {ev.minutos} minutos y una sola oportunidad. El tiempo corre aunque salgas.</div>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button style={{ ...btnGris, flex: 1 }} onClick={() => setPorIniciar(null)}>Ahora no</button>
-                        <button style={{ ...btnAzul, flex: 1 }} onClick={() => { setPorIniciar(null); setVista({ tipo: 'presentar', ev }); }}>Empezar</button>
-                      </div>
-                    </div>
+                  ? <Confirmar ev={ev} texto={`Tendrás ${ev.minutos} minutos y una sola oportunidad. El tiempo corre aunque salgas.`}
+                      onNo={() => setPorIniciar(null)} onSi={() => { setPorIniciar(null); setVista({ tipo: 'presentar', ev }); }} />
                   : <button style={btnAzul} onClick={() => setPorIniciar(ev.id)}>Presentar</button>}
           </div>
         ))}
