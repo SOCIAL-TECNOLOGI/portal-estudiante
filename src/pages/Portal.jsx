@@ -241,7 +241,8 @@ export default function Portal() {
         <Evaluaciones />
 
         {Object.entries(MUNDOS).map(([nivel, mundo]) => {
-          const cuests = porNivel[nivel] || [];
+          // Solo el historial (clases ya hechas): lo que se puede presentar está en «Evaluaciones» y lo programa el docente
+          const cuests = (porNivel[nivel] || []).filter(c => c.estado === 'completed' || c.estado === 'mastery');
           if (!cuests.length) return null;
           const bloqueado = cuests.every(c => c.estado === 'locked');
           return (

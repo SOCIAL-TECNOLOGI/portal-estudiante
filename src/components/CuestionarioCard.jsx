@@ -17,7 +17,7 @@ export default function CuestionarioCard({ cuestionario, onClick }) {
       style={{
         borderRadius: 12,
         border: `0.5px solid ${estado === 'available' ? '#3b82f6' : estado === 'completed' || estado === 'mastery' ? '#16a34a' : '#e2e8f0'}`,
-        background: 'var(--surface-2, #fff)',
+        background: '#0f172a',   // fondo oscuro como el resto del portal (antes blanco: el texto no se leía)
         padding: '0.875rem 1rem',
         cursor: estado === 'locked' ? 'default' : 'pointer',
         opacity: estado === 'locked' ? 0.6 : 1,
@@ -33,18 +33,18 @@ export default function CuestionarioCard({ cuestionario, onClick }) {
         {est.icon} {est.label}
       </div>
 
-      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.4 }}>
+      <div style={{ fontSize: 13, fontWeight: 500, color: '#f1f5f9', marginBottom: 4, lineHeight: 1.4 }}>
         {nombre || cuestionario.id}
       </div>
 
-      <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+      <div style={{ fontSize: 11, color: '#9ca3af' }}>
         {tipo} · {total_items || 0} preguntas · {nivel_minimo}
       </div>
 
       {(estado === 'completed' || estado === 'mastery' || estado === 'progress') && sesion && (
-        <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--text-primary)', marginTop: 6 }}>
+        <div style={{ fontSize: 18, fontWeight: 500, color: '#f1f5f9', marginTop: 6 }}>
           {sesion.pct || 0}%
-          <span style={{ fontSize: 11, color: 'var(--text-secondary)', marginLeft: 4 }}>aciertos</span>
+          <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 4 }}>aciertos</span>
         </div>
       )}
 
