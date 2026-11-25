@@ -427,7 +427,7 @@ export default function Evaluaciones() {
   if (vista?.tipo === 'refuerzo') return <Refuerzo onSalir={cerrar} />;
   if (vista?.tipo === 'hoja') return <Hoja hoja={vista.hoja} onSalir={cerrar} onEntregado={r => setVista({ tipo: 'resultado', titulo: vista.hoja.nombre, r })} />;
 
-  const hechas = (evs || []).filter(e => e.estado === 'entregado').length;
+  const hechas = (evs || []).filter(e => e.estado === 'entregado' && e.resultado?.validez !== 'sin_respuestas').length;   // un intento vacío no deja nada que reforzar
   return (
     <div style={{ marginBottom: 28 }}>
       <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1f5f9', marginBottom: 10 }}>📋 Evaluaciones</div>
@@ -452,7 +452,7 @@ export default function Evaluaciones() {
             {ev.programada && <div style={{ fontSize: '0.72rem', color: '#6ee7b7' }}>✅ Programada por tu docente{ev.programada.cierre ? ' · cierra ' + new Date(ev.programada.cierre).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}{ev.programada.intentos === 'varios' ? ' · varios intentos' : ''}</div>}
             {ev.estado === 'entregado'
               ? <>
-                  <button style={btnGris} onClick={() => verResultado(ev)}>{ev.resultado?.validez === 'ritmo_muy_rapido' ? 'Ver resultado · sin validez' : `Ver resultado · ${ev.resultado?.pct ?? 0}%`}</button>
+                  <button style={btnGris} onClick={() => verResultado(ev)}>{ev.resultado?.validez === 'sin_respuestas' ? 'Ver resultado · sin respuestas' : ev.resultado?.validez === 'ritmo_muy_rapido' ? 'Ver resultado · sin validez' : `Ver resultado · ${ev.resultado?.pct ?? 0}%`}</button>
                   {ev.otroIntento && !ev.reintento && (porIniciar === ev.id
                     ? <Confirmar ev={ev} texto={`Vas a presentarla de nuevo. ${ev.minutos ? `Tendrás ${ev.minutos} minutos y el tiempo corre aunque salgas.` : 'No tiene límite de tiempo, pero tu docente la puede cerrar.'}`}
                         onNo={() => setPorIniciar(null)} onSi={() => { setPorIniciar(null); setVista({ tipo: 'presentar', ev }); }} />
