@@ -225,7 +225,7 @@ export default function Portal() {
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: '0.95rem', color: '#f1f5f9' }}>{nombre}</div>
             <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>
-              {perfil.datos?.institucion || '—'} · {perfil.datos?.municipio || '—'}
+              {[perfil.datos?.institucion || '—', perfil.datos?.municipio, perfil.datos?.grado && 'Grado ' + perfil.datos.grado].filter(Boolean).join(' · ')}
             </div>
             <div style={{ marginTop: 8 }}>
               <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginBottom: 4 }}>
