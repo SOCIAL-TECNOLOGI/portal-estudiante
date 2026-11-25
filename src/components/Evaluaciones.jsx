@@ -87,10 +87,11 @@ function Opciones({ valor, onElegir, deshabilitado, correcta }) {
 function Resultado({ r, titulo, onCerrar, onRefuerzo, onRepetir }) {
   const fallos = (r.detalle || []).filter(d => d.acierto === false).length;
   const sinValidez = r.validez === 'ritmo_muy_rapido';   // respondido casi todo en ≤5 s: no se usa para diagnosticar
+  const vacio = r.validez === 'sin_respuestas';           // entregó sin marcar nada: no se califica ni se diagnostica
   return (
     <div style={capa}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px' }}>
-        <div style={{ fontSize: '0.75rem', color: sinValidez ? '#fbbf24' : '#38bdf8', fontWeight: 600 }}>{sinValidez ? '⚠️ Entregado, pero sin validez para tu diagnóstico' : '✅ Entregado'}</div>
+        <div style={{ fontSize: '0.75rem', color: sinValidez || vacio ? '#fbbf24' : '#38bdf8', fontWeight: 600 }}>{vacio ? '⚠️ Entregado sin respuestas' : sinValidez ? '⚠️ Entregado, pero sin validez para tu diagnóstico' : '✅ Entregado'}</div>
         <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f1f5f9', margin: '4px 0 16px' }}>{titulo}</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <div style={{ flex: 1, ...caja, marginBottom: 0, textAlign: 'center' }}>
@@ -104,8 +105,10 @@ function Resultado({ r, titulo, onCerrar, onRefuerzo, onRepetir }) {
             💬 {r.diagnostico.mensaje_estudiante}
           </div>
         )}
-        {!r.diagnostico && <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 12 }}>Tu diagnóstico se actualizará en tu ruta en unos minutos.</div>}
-        <div style={{ ...caja, padding: 0, overflow: 'hidden' }}>
+        {vacio && <div style={{ fontSize: '0.85rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 12 }}>No marcaste ninguna respuesta, así que no hay nada que calificar ni diagnosticar. Si la evaluación sigue abierta, puedes presentarla de nuevo desde tu portal.</div>}
+        {!vacio && !r.diagnostico && r.pmapEnCamino !== false && <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 12 }}>Tu diagnóstico se actualizará en tu ruta en unos minutos.</div>}
+        {!vacio && r.claveOculta && <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 12 }}>🔒 Las respuestas correctas se mostrarán cuando tu docente cierre la evaluación.</div>}
+        {!vacio && <div style={{ ...caja, padding: 0, overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', fontSize: '0.72rem', color: '#9ca3af', padding: '8px 14px', borderBottom: '1px solid #1f2937' }}>
             <div>Pregunta</div><div>Tu respuesta</div><div>Correcta</div>
           </div>
@@ -113,12 +116,12 @@ function Resultado({ r, titulo, onCerrar, onRefuerzo, onRepetir }) {
             <div key={d.n} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', fontSize: '0.85rem', padding: '8px 14px', borderBottom: '1px solid #111827' }}>
               <div style={{ color: '#9ca3af' }}>{d.n}</div>
               <div style={{ fontWeight: 700, color: d.acierto ? '#4ade80' : '#f87171' }}>{d.tuya || '—'} {d.acierto ? '✓' : '✗'}</div>
-              <div style={{ fontWeight: 700, color: '#f1f5f9' }}>{d.correcta || '—'}</div>
+              <div style={{ fontWeight: 700, color: '#f1f5f9' }}>{r.claveOculta ? '🔒' : (d.correcta || '—')}</div>
             </div>
           ))}
-        </div>
+        </div>}
         {sinValidez && r.reintento && onRepetir && <button style={{ ...btnAzul, width: '100%', marginBottom: 10 }} onClick={onRepetir}>🔁 Repetir con calma (última oportunidad)</button>}
-        {!sinValidez && fallos > 0 && onRefuerzo && <button style={{ ...btnAzul, width: '100%', marginBottom: 10 }} onClick={onRefuerzo}>💪 Practicar lo que fallé</button>}
+        {!sinValidez && !vacio && fallos > 0 && onRefuerzo && <button style={{ ...btnAzul, width: '100%', marginBottom: 10 }} onClick={onRefuerzo}>💪 Practicar lo que fallé</button>}
         <button style={{ ...btnGris, width: '100%' }} onClick={onCerrar}>Volver al portal</button>
       </div>
     </div>
