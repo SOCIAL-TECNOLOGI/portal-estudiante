@@ -186,7 +186,7 @@ function Reproductor({ ev, onSalir, onEntregado }) {
             <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{info.nombre}</div>
             <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Pregunta {n} · {hechas}/{total} respondidas</div>
           </div>
-          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: poco ? '#f87171' : '#38bdf8', fontVariantNumeric: 'tabular-nums' }}>⏱ {mmss(restante)}</div>
+          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: poco ? '#f87171' : '#38bdf8', fontVariantNumeric: 'tabular-nums' }}>{info.sinLimite && restante > 15 * 60000 ? '⏱ sin límite' : '⏱ ' + mmss(restante)}</div>
           <button style={{ ...btnGris, padding: '0.45rem 0.8rem', fontSize: '0.75rem' }} onClick={onSalir} title="Puedes volver antes de que acabe el tiempo">Salir</button>
         </div>
       </div>
@@ -209,7 +209,7 @@ function Reproductor({ ev, onSalir, onEntregado }) {
         {confirmar && (
           <div style={{ ...caja, marginTop: 14, border: '1px solid #38bdf8' }}>
             <div style={{ fontSize: '0.88rem', color: '#f1f5f9', marginBottom: 10 }}>
-              {hechas < total ? `Te faltan ${total - hechas} pregunta(s). ` : ''}Solo tienes una oportunidad: después de entregar no podrás cambiar tus respuestas.
+              {hechas < total ? `Te faltan ${total - hechas} pregunta(s). ` : ''}Después de entregar no podrás cambiar tus respuestas.
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button style={{ ...btnGris, flex: 1 }} onClick={() => setConfirmar(false)}>Seguir respondiendo</button>
@@ -445,21 +445,28 @@ export default function Evaluaciones() {
         {(evs || []).map(ev => (
           <div key={ev.id} style={{ ...caja, marginBottom: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9' }}>{ev.nombre}</div>
-            <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{ev.total} preguntas · {ev.minutos} min{ev.deTuClase ? ' · de tu clase' : ''}</div>
+            <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{ev.total} preguntas · {ev.minutos ? ev.minutos + ' min' : 'sin límite de tiempo'}{ev.deTuClase ? ' · de tu clase' : ''}</div>
+            {ev.programada && <div style={{ fontSize: '0.72rem', color: '#6ee7b7' }}>✅ Programada por tu docente{ev.programada.cierre ? ' · cierra ' + new Date(ev.programada.cierre).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}{ev.programada.intentos === 'varios' ? ' · varios intentos' : ''}</div>}
             {ev.estado === 'entregado'
               ? <>
                   <button style={btnGris} onClick={() => verResultado(ev)}>{ev.resultado?.validez === 'ritmo_muy_rapido' ? 'Ver resultado · sin validez' : `Ver resultado · ${ev.resultado?.pct ?? 0}%`}</button>
+                  {ev.otroIntento && !ev.reintento && (porIniciar === ev.id
+                    ? <Confirmar ev={ev} texto={`Vas a presentarla de nuevo. ${ev.minutos ? `Tendrás ${ev.minutos} minutos y el tiempo corre aunque salgas.` : 'No tiene límite de tiempo, pero tu docente la puede cerrar.'}`}
+                        onNo={() => setPorIniciar(null)} onSi={() => { setPorIniciar(null); setVista({ tipo: 'presentar', ev }); }} />
+                    : <button style={btnAzul} onClick={() => setPorIniciar(ev.id)}>Presentar de nuevo</button>)}
                   {ev.reintento && (porIniciar === ev.id
-                    ? <Confirmar ev={ev} texto={`Es tu último intento. Tendrás ${ev.minutos} minutos y el tiempo corre aunque salgas. Lee cada pregunta completa antes de marcar.`}
+                    ? <Confirmar ev={ev} texto={`Es tu último intento. ${ev.minutos ? `Tendrás ${ev.minutos} minutos y el tiempo corre aunque salgas.` : 'No tiene límite de tiempo.'} Lee cada pregunta completa antes de marcar.`}
                         onNo={() => setPorIniciar(null)} onSi={() => { setPorIniciar(null); setVista({ tipo: 'presentar', ev }); }} />
                     : <button style={btnAzul} onClick={() => setPorIniciar(ev.id)}>🔁 Repetir con calma</button>)}
                 </>
               : ev.estado === 'en_curso'
                 ? <button style={btnAzul} onClick={() => setVista({ tipo: 'presentar', ev })}>Continuar</button>
-                : porIniciar === ev.id
-                  ? <Confirmar ev={ev} texto={`Tendrás ${ev.minutos} minutos y una sola oportunidad. El tiempo corre aunque salgas.`}
-                      onNo={() => setPorIniciar(null)} onSi={() => { setPorIniciar(null); setVista({ tipo: 'presentar', ev }); }} />
-                  : <button style={btnAzul} onClick={() => setPorIniciar(ev.id)}>Presentar</button>}
+                : !ev.programada
+                  ? <div style={{ fontSize: '0.75rem', color: '#9ca3af', padding: '0.5rem 0' }}>🔒 Se abre cuando tu docente la programe</div>
+                  : porIniciar === ev.id
+                    ? <Confirmar ev={ev} texto={`${ev.minutos ? `Tendrás ${ev.minutos} minutos; el tiempo corre aunque salgas.` : 'No tiene límite de tiempo, pero tu docente la puede cerrar.'} ${ev.programada.intentos === 'varios' ? 'Para tu diagnóstico cuenta el primer intento.' : 'Tienes una sola oportunidad.'}`}
+                        onNo={() => setPorIniciar(null)} onSi={() => { setPorIniciar(null); setVista({ tipo: 'presentar', ev }); }} />
+                    : <button style={btnAzul} onClick={() => setPorIniciar(ev.id)}>Presentar</button>}
           </div>
         ))}
       </div>
