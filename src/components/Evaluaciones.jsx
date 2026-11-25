@@ -87,25 +87,28 @@ function Opciones({ valor, onElegir, deshabilitado, correcta }) {
 function Resultado({ r, titulo, onCerrar, onRefuerzo, onRepetir }) {
   const fallos = (r.detalle || []).filter(d => d.acierto === false).length;
   const sinValidez = r.validez === 'ritmo_muy_rapido';   // respondido casi todo en ≤5 s: no se usa para diagnosticar
-  const vacio = r.validez === 'sin_respuestas';           // entregó sin marcar nada: no se califica ni se diagnostica
+  const sinNada = r.validez === 'sin_respuestas';         // entregó sin marcar nada
+  const incompleto = r.validez === 'incompleta';          // faltaron preguntas: para el diagnóstico hay que responderlas todas
+  const vacio = sinNada || incompleto;                    // en los dos casos no se califica ni se diagnostica
   return (
     <div style={capa}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px' }}>
-        <div style={{ fontSize: '0.75rem', color: sinValidez || vacio ? '#fbbf24' : '#38bdf8', fontWeight: 600 }}>{vacio ? '⚠️ Entregado sin respuestas' : sinValidez ? '⚠️ Entregado, pero sin validez para tu diagnóstico' : '✅ Entregado'}</div>
+        <div style={{ fontSize: '0.75rem', color: sinValidez || vacio ? '#fbbf24' : '#38bdf8', fontWeight: 600 }}>{sinNada ? '⚠️ Entregado sin respuestas' : incompleto ? '⚠️ Entregado incompleto' : sinValidez ? '⚠️ Entregado, pero sin validez para tu diagnóstico' : '✅ Entregado'}</div>
         <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f1f5f9', margin: '4px 0 16px' }}>{titulo}</div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {!vacio && <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <div style={{ flex: 1, ...caja, marginBottom: 0, textAlign: 'center' }}>
             <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f1f5f9' }}>{r.pct}%</div>
             <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{r.aciertos} de {r.total} correctas</div>
           </div>
-        </div>
+        </div>}
         {r.diagnostico?.resumen_publico && <div style={{ fontSize: '0.85rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 12 }}>{r.diagnostico.resumen_publico}</div>}
         {r.diagnostico?.mensaje_estudiante && (
           <div style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: '0.85rem', color: '#38bdf8', lineHeight: 1.6, marginBottom: 16 }}>
             💬 {r.diagnostico.mensaje_estudiante}
           </div>
         )}
-        {vacio && <div style={{ fontSize: '0.85rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 12 }}>No marcaste ninguna respuesta, así que no hay nada que calificar ni diagnosticar. Si la evaluación sigue abierta, puedes presentarla de nuevo desde tu portal.</div>}
+        {incompleto && <div style={{ fontSize: '0.85rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 12 }}>Respondiste {r.respondidas} de {r.totalPreguntas} preguntas. Para que cuente en tu diagnóstico tienes que responderlas todas, así que este intento no se califica. Si la evaluación sigue abierta, puedes presentarla de nuevo desde tu portal.</div>}
+        {sinNada && <div style={{ fontSize: '0.85rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 12 }}>No marcaste ninguna respuesta, así que no hay nada que calificar ni diagnosticar. Si la evaluación sigue abierta, puedes presentarla de nuevo desde tu portal.</div>}
         {!vacio && !r.diagnostico && r.pmapEnCamino !== false && <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 12 }}>Tu diagnóstico se actualizará en tu ruta en unos minutos.</div>}
         {!vacio && r.claveOculta && <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 12 }}>🔒 Las respuestas correctas se mostrarán cuando tu docente cierre la evaluación.</div>}
         {!vacio && <div style={{ ...caja, padding: 0, overflow: 'hidden' }}>
@@ -115,7 +118,7 @@ function Resultado({ r, titulo, onCerrar, onRefuerzo, onRepetir }) {
           {(r.detalle || []).map(d => (
             <div key={d.n} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', fontSize: '0.85rem', padding: '8px 14px', borderBottom: '1px solid #111827' }}>
               <div style={{ color: '#9ca3af' }}>{d.n}</div>
-              <div style={{ fontWeight: 700, color: d.acierto ? '#4ade80' : '#f87171' }}>{d.tuya || '—'} {d.acierto ? '✓' : '✗'}</div>
+              <div style={{ fontWeight: 700, color: !d.tuya ? '#9ca3af' : d.acierto ? '#4ade80' : '#f87171' }}>{d.tuya ? `${d.tuya} ${d.acierto ? '✓' : '✗'}` : 'sin responder'}</div>
               <div style={{ fontWeight: 700, color: '#f1f5f9' }}>{r.claveOculta ? '🔒' : (d.correcta || '—')}</div>
             </div>
           ))}
@@ -427,7 +430,7 @@ export default function Evaluaciones() {
   if (vista?.tipo === 'refuerzo') return <Refuerzo onSalir={cerrar} />;
   if (vista?.tipo === 'hoja') return <Hoja hoja={vista.hoja} onSalir={cerrar} onEntregado={r => setVista({ tipo: 'resultado', titulo: vista.hoja.nombre, r })} />;
 
-  const hechas = (evs || []).filter(e => e.estado === 'entregado' && e.resultado?.validez !== 'sin_respuestas').length;   // un intento vacío no deja nada que reforzar
+  const hechas = (evs || []).filter(e => e.estado === 'entregado' && !['sin_respuestas', 'incompleta'].includes(e.resultado?.validez)).length;   // un intento vacío no deja nada que reforzar
   return (
     <div style={{ marginBottom: 28 }}>
       <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1f5f9', marginBottom: 10 }}>📋 Evaluaciones</div>
@@ -452,7 +455,7 @@ export default function Evaluaciones() {
             {ev.programada && <div style={{ fontSize: '0.72rem', color: '#6ee7b7' }}>✅ Programada por tu docente{ev.programada.cierre ? ' · cierra ' + new Date(ev.programada.cierre).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}{ev.programada.intentos === 'varios' ? ' · varios intentos' : ''}</div>}
             {ev.estado === 'entregado'
               ? <>
-                  <button style={btnGris} onClick={() => verResultado(ev)}>{ev.resultado?.validez === 'sin_respuestas' ? 'Ver resultado · sin respuestas' : ev.resultado?.validez === 'ritmo_muy_rapido' ? 'Ver resultado · sin validez' : `Ver resultado · ${ev.resultado?.pct ?? 0}%`}</button>
+                  <button style={btnGris} onClick={() => verResultado(ev)}>{ev.resultado?.validez === 'sin_respuestas' ? 'Ver resultado · sin respuestas' : ev.resultado?.validez === 'incompleta' ? `Ver resultado · incompleto (${ev.resultado.respondidas} de ${ev.resultado.totalPreguntas})` : ev.resultado?.validez === 'ritmo_muy_rapido' ? 'Ver resultado · sin validez' : `Ver resultado · ${ev.resultado?.pct ?? 0}%`}</button>
                   {ev.otroIntento && !ev.reintento && (porIniciar === ev.id
                     ? <Confirmar ev={ev} texto={`Vas a presentarla de nuevo. ${ev.minutos ? `Tendrás ${ev.minutos} minutos y el tiempo corre aunque salgas.` : 'No tiene límite de tiempo, pero tu docente la puede cerrar.'}`}
                         onNo={() => setPorIniciar(null)} onSi={() => { setPorIniciar(null); setVista({ tipo: 'presentar', ev }); }} />
