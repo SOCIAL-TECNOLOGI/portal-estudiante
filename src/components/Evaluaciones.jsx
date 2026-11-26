@@ -12,6 +12,11 @@ const btnGris = { ...btn, background: '#1f2937', color: '#d1d5db' };
 const capa = { position: 'fixed', inset: 0, background: '#020617', zIndex: 1000, overflowY: 'auto', color: '#e5e7eb', fontFamily: 'system-ui, sans-serif' };
 const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
+// El banco guarda las áreas sin tildes ("Fisica", "Lectura Critica"): se muestran bien escritas
+const AREAS = { fisica: 'Física', quimica: 'Química', biologia: 'Biología', matematicas: 'Matemáticas', 'lectura critica': 'Lectura crítica',
+  ingles: 'Inglés', sociales: 'Sociales', 'sociales y ciudadanas': 'Sociales y ciudadanas', 'ciencias naturales': 'Ciencias naturales' };
+const areaBonita = a => AREAS[String(a || '').trim().toLowerCase()] || a;
+
 function Aviso({ texto, tipo }) {
   if (!texto) return null;
   const c = tipo === 'ok' ? '#4ade80' : '#f87171';
@@ -263,7 +268,7 @@ function Microrrutinas({ onCuenta }) {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#f1f5f9' }}>{m.hecha ? '✅ ' : ''}{m.titulo}</div>
               {m.habilidad && <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: 3 }}>🎯 {m.habilidad}</div>}
-              <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 2 }}>{m.area} · {m.minutos} min</div>
+              <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 2 }}>{areaBonita(m.area)} · {m.minutos} min</div>
             </div>
             <div style={{ color: '#38bdf8', fontSize: '0.8rem' }}>{abierta === m.id ? '▲' : '▼'}</div>
           </div>
@@ -341,7 +346,7 @@ function Refuerzo({ onSalir }) {
           </div>
         ) : p && (
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: 6 }}>{p.area} · de «{p.nombre}», pregunta {p.n}</div>
+            <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: 6 }}>{areaBonita(p.area)} · de «{p.nombre}», pregunta {p.n}</div>
             {p.modo === 'paginas' ? <PaginaPdf pdf={p.pdf} pagina={p.n} visor={p.visor} /> : <DocumentoCompleto pdf={p.pdf} n={p.n} />}
             <Opciones valor={elegida} onElegir={responder} deshabilitado={!!res} correcta={res?.correcta} />
             {res && <Aviso tipo={res.acierto ? 'ok' : 'err'} texto={res.acierto ? '¡Correcto!' : `La respuesta correcta es ${res.correcta}.`} />}
