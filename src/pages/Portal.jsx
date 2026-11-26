@@ -16,11 +16,19 @@ const MUNDOS = {
 const TENDENCIA_LABEL = { estable: '→ Estable', descendente: '↓ Descendente', inconsistente: '↔ Inconsistente', ascendente: '↑ Ascendente' };
 const TENDENCIA_COLOR = { estable: '#38bdf8', descendente: '#f87171', inconsistente: '#fbbf24', ascendente: '#4ade80' };
 
+// El motor guardaba un patrón (patron_detectado); desde Gemini 4 guarda una lista (patrones_presentes)
+const patronesDe = x => !x ? [] : Array.isArray(x.patrones_presentes) ? x.patrones_presentes.filter(p => typeof p === 'string') : (typeof x.patron_detectado === 'string' && x.patron_detectado ? [x.patron_detectado] : []);
+const chipPatron = (p, grande) => (
+  <span key={p} style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: grande ? 20 : 10, padding: grande ? '3px 12px' : '2px 8px', fontSize: grande ? '0.78rem' : '0.68rem', color: '#a855f7', fontWeight: grande ? 600 : 400 }}>
+    {p.replace(/_/g, ' ')}
+  </span>
+);
+
 function SeccionPmap({ pmap }) {
   const [abierto, setAbierto] = useState(false);
   const [sesionAbierta, setSesionAbierta] = useState(null);
 
-  if (!pmap || (!pmap.trayectoria?.patron_detectado && !Object.keys(pmap.sesiones || {}).length)) return null;
+  if (!pmap || (!patronesDe(pmap.trayectoria).length && !Object.keys(pmap.sesiones || {}).length)) return null;
 
   const tray = pmap.trayectoria || {};
   const sesiones = pmap.sesiones || {};
@@ -45,7 +53,7 @@ function SeccionPmap({ pmap }) {
       </div>
 
       {/* Trayectoria general */}
-      {(tray.patron_detectado || tray.nivel_actual) && (
+      {(patronesDe(tray).length > 0 || tray.nivel_actual) && (
         <div style={{ background: '#0f172a', border: '1px solid #1f2937', borderRadius: 14, padding: '16px 18px', marginBottom: 12 }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a855f7', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trayectoria general</div>
 
@@ -61,11 +69,7 @@ function SeccionPmap({ pmap }) {
                 {tendLabel}
               </span>
             )}
-            {tray.patron_detectado && (
-              <span style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 20, padding: '3px 12px', fontSize: '0.78rem', color: '#a855f7', fontWeight: 600 }}>
-                {tray.patron_detectado.replace(/_/g, ' ')}
-              </span>
-            )}
+            {patronesDe(tray).map(p => chipPatron(p, true))}
           </div>
 
           {/* Fortaleza + Área de trabajo */}
@@ -132,11 +136,7 @@ function SeccionPmap({ pmap }) {
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {diag.patron_detectado && (
-                          <span style={{ fontSize: '0.68rem', background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 10, padding: '2px 8px', color: '#a855f7' }}>
-                            {diag.patron_detectado.replace(/_/g, ' ')}
-                          </span>
-                        )}
+                        {patronesDe(diag).map(p => chipPatron(p, false))}
                         <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{isOpen ? '▲' : '▼'}</span>
                       </div>
                     </button>
@@ -207,6 +207,7 @@ export default function Portal() {
   const nivelActual = pmap?.trayectoria?.nivel_actual || perfil.trayectoria?.nivel_actual || 'N1';
   const cuartilActual = perfil.trayectoria?.cuartil_actual || 'Q1';
   const progreso = perfil.progreso?.general || 0;
+  const conProgreso = progreso > 0 || (datos?.sesiones || []).length > 0;   // el progreso sale de las clases en AlaU: un estudiante de lista sin clases no lo tiene (antes "0%")
 
   // APROBADO — portal completo
   return (
@@ -229,11 +230,11 @@ export default function Portal() {
             </div>
             <div style={{ marginTop: 8 }}>
               <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginBottom: 4 }}>
-                Nivel {nivelActual}{cuartilActual} · Progreso general {progreso}%
+                Nivel {nivelActual}{cuartilActual}{conProgreso ? ` · Progreso general ${progreso}%` : ''}
               </div>
-              <div style={{ height: 6, background: '#1f2937', borderRadius: 3, overflow: 'hidden' }}>
+              {conProgreso && <div style={{ height: 6, background: '#1f2937', borderRadius: 3, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${progreso}%`, background: '#38bdf8', borderRadius: 3 }} />
-              </div>
+              </div>}
             </div>
           </div>
         </div>
@@ -290,7 +291,7 @@ export default function Portal() {
         // Buscar diagnóstico PMAP de Docente-1 para esta sesión
         const sesionKey = modalSesion?.id?.replace(/\//g, '_');
         const pmapSesion = sesionKey && pmap?.sesiones?.[sesionKey];
-        const patron = pmapSesion?.patron_detectado || modalSesion?.sesion?.diagnostico?.patron_detectado || pmap?.trayectoria?.patron_detectado || perfil?.trayectoria?.patron_detectado || '—';
+        const patron = [pmapSesion, pmapSesion?.diagnostico, modalSesion?.sesion?.diagnostico, pmap?.trayectoria, perfil?.trayectoria].map(patronesDe).find(l => l.length)?.map(p => p.replace(/_/g, ' ')).join(', ') || '—';
         const mensaje = pmapSesion?.mensaje_estudiante || modalSesion?.sesion?.diagnostico?.mensaje_estudiante || pmap?.trayectoria?.mensaje_estudiante || perfil?.trayectoria?.mensaje_estudiante;
         const resumen = pmapSesion?.resumen_publico || modalSesion?.sesion?.diagnostico?.resumen_publico || pmap?.trayectoria?.resumen_publico || perfil?.trayectoria?.resumen_publico;
         const aciertos = modalSesion?.sesion?.pct ?? perfil?.progreso?.general ?? 0;

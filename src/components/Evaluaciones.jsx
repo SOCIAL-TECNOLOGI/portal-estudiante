@@ -453,6 +453,7 @@ export default function Evaluaciones() {
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9' }}>{ev.nombre}</div>
             <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>{ev.total} preguntas · {ev.minutos ? ev.minutos + ' min' : 'sin límite de tiempo'}{ev.deTuClase ? ' · de tu clase' : ''}</div>
             {ev.programada && <div style={{ fontSize: '0.72rem', color: '#6ee7b7' }}>✅ Programada por tu docente{ev.programada.cierre ? ' · cierra ' + new Date(ev.programada.cierre).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}{ev.programada.intentos === 'varios' ? ' · varios intentos' : ''}</div>}
+            {!ev.programada && ev.cerrada && <div style={{ fontSize: '0.72rem', color: '#9ca3af' }}>🔒 Cerrada{typeof ev.cerrada === 'number' ? ' el ' + new Date(ev.cerrada).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</div>}
             {ev.estado === 'entregado'
               ? <>
                   <button style={btnGris} onClick={() => verResultado(ev)}>{ev.resultado?.validez === 'sin_respuestas' ? 'Ver resultado · sin respuestas' : ev.resultado?.validez === 'incompleta' ? `Ver resultado · incompleto (${ev.resultado.respondidas} de ${ev.resultado.totalPreguntas})` : ev.resultado?.validez === 'ritmo_muy_rapido' ? 'Ver resultado · sin validez' : `Ver resultado · ${ev.resultado?.pct ?? 0}%`}</button>
