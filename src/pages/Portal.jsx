@@ -26,7 +26,7 @@ function SeccionPmap({ pmap }) {
   const sesiones = pmap.sesiones || {};
   const sesionesList = Object.entries(sesiones)
     .map(([key, s]) => ({ key, ...s }))
-    .sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    .sort((a, b) => (new Date(b.fecha || 0).getTime() || 0) - (new Date(a.fecha || 0).getTime() || 0));
 
   const tendColor = TENDENCIA_COLOR[tray.tendencia] || '#9ca3af';
   const tendLabel = TENDENCIA_LABEL[tray.tendencia] || tray.tendencia || '—';
