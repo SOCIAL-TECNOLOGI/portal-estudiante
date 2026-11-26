@@ -115,7 +115,9 @@ function Resultado({ r, titulo, onCerrar, onRefuerzo, onRepetir }) {
         {incompleto && <div style={{ fontSize: '0.85rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 12 }}>Respondiste {r.respondidas} de {r.totalPreguntas} preguntas. Para que cuente en tu diagnóstico tienes que responderlas todas, así que este intento no se califica. Si la evaluación sigue abierta, puedes presentarla de nuevo desde tu portal.</div>}
         {sinNada && <div style={{ fontSize: '0.85rem', color: '#d1d5db', lineHeight: 1.6, marginBottom: 12 }}>No marcaste ninguna respuesta, así que no hay nada que calificar ni diagnosticar. Si la evaluación sigue abierta, puedes presentarla de nuevo desde tu portal.</div>}
         {!vacio && !r.diagnostico && r.pmapEnCamino !== false && <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 12 }}>Tu diagnóstico se actualizará en tu ruta en unos minutos.</div>}
-        {!vacio && r.claveOculta && <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 12 }}>🔒 Las respuestas correctas se mostrarán cuando tu docente cierre la evaluación.</div>}
+        {!vacio && r.claveOculta && <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 12 }}>{r.claveDesde
+          ? `🔒 Las respuestas correctas se verán desde el ${new Date(r.claveDesde).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}, cuando cierre el plazo para subir la hoja. Búscalas en «Ver resultado».`
+          : '🔒 Las respuestas correctas se mostrarán cuando tu docente cierre la evaluación.'}</div>}
         {!vacio && <div style={{ ...caja, padding: 0, overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', fontSize: '0.72rem', color: '#9ca3af', padding: '8px 14px', borderBottom: '1px solid #1f2937' }}>
             <div>Pregunta</div><div>Tu respuesta</div><div>Correcta</div>
@@ -419,11 +421,15 @@ export default function Evaluaciones() {
 
   const cargar = useCallback(() => {
     api('/api/portal/evaluaciones').then(d => setEvs(d.evaluaciones)).catch(e => setAviso(e.message));
-    api('/api/portal/hojas').then(d => setHojas(d.hojas.filter(h => h.abierta && !h.entregada && !h.enVivo))).catch(() => {});
+    api('/api/portal/hojas').then(d => setHojas(d.hojas.filter(h => (h.abierta && !h.entregada && !h.enVivo) || h.entregada))).catch(() => {});
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
 
   const cerrar = () => { setVista(null); cargar(); };
+  const verHoja = async h => {   // hoja ya subida: la clave aparece cuando vence el plazo
+    try { setVista({ tipo: 'resultado', titulo: h.nombre, r: await api(`/api/portal/hojas/${encodeURIComponent(h.id)}/resultado`) }); }
+    catch (e) { setAviso(e.message); }
+  };
   const verResultado = async ev => {
     try { setVista({ tipo: 'resultado', titulo: ev.nombre, ev, r: await api(`/api/portal/evaluaciones/${encodeURIComponent(ev.id)}/entregar`, {}) }); }
     catch (e) { setAviso(e.message); }
@@ -440,7 +446,14 @@ export default function Evaluaciones() {
     <div style={{ marginBottom: 28 }}>
       <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1f5f9', marginBottom: 10 }}>📋 Evaluaciones</div>
       <Aviso texto={aviso} />
-      {hojas.map(h => (
+      {hojas.filter(h => h.entregada).map(h => (
+        <div key={h.id} style={{ ...caja, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 180, fontSize: '0.8rem', color: '#e5e7eb' }}>📝 Hoja de «{h.nombre}» · subida
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{Date.now() < h.vence ? `🔒 Respuestas correctas desde el ${new Date(h.vence).toLocaleDateString('es-CO')}` : 'Respuestas correctas disponibles'}</div></div>
+          <button style={btnGris} onClick={() => verHoja(h)}>Ver resultado</button>
+        </div>
+      ))}
+      {hojas.filter(h => !h.entregada).map(h => (
         <div key={h.id} style={{ ...caja, border: '1px solid #fbbf24' }}>
           <div style={{ fontSize: '0.85rem', color: '#f1f5f9', fontWeight: 600 }}>📝 ¿Respondiste en papel «{h.nombre}»?</div>
           <div style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '4px 0 10px' }}>Sube tu hoja de respuestas antes del {new Date(h.vence).toLocaleDateString('es-CO')}.</div>
