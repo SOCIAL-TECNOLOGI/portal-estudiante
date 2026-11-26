@@ -371,7 +371,8 @@ function Hoja({ hoja, onSalir, onEntregado }) {
     try { onEntregado(await api('/api/portal/hojas/entregar', { id: hoja.id, respuestas: resp })); }
     catch (e) { setAviso(e.message); setEnviando(false); }
   };
-  const hechas = Object.keys(resp).length;
+  const hechas = Object.keys(resp).length, faltan = hoja.preguntas.length - hechas;
+  const [intento, setIntento] = useState(false);   // tras tocar Enviar con faltantes, se resaltan las filas vacías
   return (
     <div style={capa}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px 40px' }}>
@@ -379,10 +380,10 @@ function Hoja({ hoja, onSalir, onEntregado }) {
           <div style={{ flex: 1, fontWeight: 700, color: '#f1f5f9' }}>📝 Hoja de respuestas</div>
           <button style={{ ...btnGris, padding: '0.45rem 0.8rem', fontSize: '0.75rem' }} onClick={onSalir}>Salir</button>
         </div>
-        <div style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: 14 }}>{hoja.nombre}. Copia aquí lo que marcaste en papel. Solo puedes enviarla una vez.</div>
+        <div style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: 14 }}>{hoja.nombre}. Copia aquí lo que marcaste en papel. Solo puedes enviarla una vez y con todas las respuestas: si en el papel dejaste alguna en blanco, marca la opción que te parezca más probable.</div>
         {hoja.preguntas.map(n => (
-          <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <div style={{ width: 34, fontSize: '0.85rem', color: '#9ca3af' }}>{n}</div>
+          <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, borderRadius: 8, outline: intento && !resp[n] ? '1px solid #f59e0b' : 'none' }}>
+            <div style={{ width: 34, fontSize: '0.85rem', color: intento && !resp[n] ? '#fbbf24' : '#9ca3af' }}>{n}</div>
             {OPC.map(o => (
               <button key={o} onClick={() => setResp(r => ({ ...r, [n]: o }))}
                 style={{ ...btn, flex: 1, padding: '0.55rem 0', background: resp[n] === o ? '#38bdf8' : '#1f2937', color: resp[n] === o ? '#020617' : '#e5e7eb' }}>{o}</button>
@@ -390,8 +391,9 @@ function Hoja({ hoja, onSalir, onEntregado }) {
           </div>
         ))}
         <Aviso texto={aviso} />
-        <button style={{ ...btnAzul, width: '100%', marginTop: 12 }} disabled={!hechas || enviando} onClick={entregar}>
-          {enviando ? 'Calificando…' : `Enviar hoja (${hechas}/${hoja.preguntas.length})`}
+        <button style={{ ...btnAzul, width: '100%', marginTop: 12, opacity: faltan ? 0.55 : 1 }} disabled={enviando}
+          onClick={() => { if (faltan) { setIntento(true); setAviso(`Te faltan ${faltan} de ${hoja.preguntas.length}. Las filas sin marcar están resaltadas.`); return; } entregar(); }}>
+          {enviando ? 'Calificando…' : faltan ? `Te faltan ${faltan} de ${hoja.preguntas.length}` : `Enviar hoja (${hechas}/${hoja.preguntas.length})`}
         </button>
       </div>
     </div>
